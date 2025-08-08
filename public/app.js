@@ -395,12 +395,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleLogStay() {
         showFeedback('', 'clear'); // Limpa feedback anterior
         try {
-            // Registrar diária será tratado via POST na API principal
-            const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(appData) });
+            // Registrar diária para ontem
+            const response = await fetch(API_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ action: 'registrar-diaria' }) 
+            });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'Erro desconhecido.');
 
-            showFeedback('Diária registrada com sucesso!', 'success');
+            showFeedback(result.message, 'success');
             await loadData(); // Recarrega tudo para garantir consistência
         } catch (error) {
             console.error('Erro ao registrar diária:', error);
@@ -472,24 +476,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const fullDate = `${year}-${month}-${day}`;
 
         try {
-            // Registrar diária específica será tratado via POST na API principal
-            const response = await fetch(API_URL, {
+            // Usar a rota específica para registrar/remover diária
+            const response = await fetch(`${API_URL}/registrar-diaria-especifica`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...appData, action: 'registrar-diaria-especifica', date: fullDate }),
+                body: JSON.stringify({ date: fullDate }),
             });
 
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.message || 'Erro ao registrar diária.');
+                throw new Error(result.message || 'Erro ao alterar diária.');
             }
 
             showFeedback(result.message, 'success');
             await loadData(); // Recarrega os dados para atualizar a UI
 
         } catch (error) {
-            console.error('Erro ao registrar diária específica:', error);
+            console.error('Erro ao alterar diária específica:', error);
             showFeedback(error.message, 'error');
         }
     }

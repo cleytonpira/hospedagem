@@ -15,16 +15,41 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 - **Backend**: Node.js + Express
 - **Frontend**: HTML, CSS (Tailwind), JavaScript
 - **Armazenamento**: JSON file
+- **Arquitetura**: Módulo compartilhado para lógica de negócio
+
+## Estrutura do Projeto
+
+```
+├── public/
+│   ├── index.html             # Interface principal
+│   ├── app.js                 # Lógica do frontend
+│   └── style.css              # Estilos
+├── server.js                  # Servidor Express com todas as funcionalidades
+├── vercel.json                # Configuração do Vercel (apenas arquivos estáticos)
+└── dados.json                 # Arquivo de dados (ignorado pelo Git)
+```
+
+### Servidor Unificado
+
+O arquivo `server.js` contém toda a lógica da aplicação:
+- **Funções de dados**: `readData()`, `saveData()`
+- **Lógica de negócio**: `registrarDiariaOntem()`, `alternarDiariaEspecifica()`
+- **Endpoints da API**: GET/POST para `/api/hospedagem` e rotas específicas
+- **Servidor estático**: Serve arquivos da pasta `public/`
+
+Esta arquitetura simplificada mantém toda a funcionalidade em um único arquivo, facilitando a manutenção e o desenvolvimento.
 
 ## Deploy no Vercel
 
-### Arquitetura Serverless
+### Arquitetura de Arquivos Estáticos
 
-Esta aplicação foi configurada para usar **Serverless Functions** do Vercel:
+Esta aplicação está configurada para deploy como **arquivos estáticos** no Vercel:
 
 - **Frontend**: Arquivos estáticos servidos da pasta `public/`
-- **Backend**: API serverless em `api/hospedagem.js`
-- **Dados**: Persistência via arquivo JSON (limitações em produção)
+- **Backend**: Para desenvolvimento local apenas (`server.js`)
+- **Dados**: Persistência via arquivo JSON (apenas local)
+
+**Nota**: O backend (`server.js`) é usado apenas para desenvolvimento local. No Vercel, apenas os arquivos estáticos da pasta `public/` são servidos.
 
 ### Pré-requisitos
 

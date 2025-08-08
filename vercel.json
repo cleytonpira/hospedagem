@@ -2,15 +2,11 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/hospedagem",
-      "destination": "/api/hospedagem.js"
-    },
-    {
       "source": "/",
       "destination": "/public/index.html"
     },
     {
-      "source": "/((?!api).*)",
+      "source": "/(.*)",
       "destination": "/public/$1"
     }
   ]
