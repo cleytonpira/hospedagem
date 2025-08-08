@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Constantes e Estado da Aplicação ---
     const API_URL = '/api/hospedagem';
+    const LOCAL_STORAGE_KEY = 'hospedagem-app-data';
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     let appData = getInitialData();
 
@@ -31,36 +32,90 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Carrega os dados principais do servidor.
+     * Carrega os dados do localStorage primeiro, depois tenta sincronizar com o servidor.
      */
     async function loadData() {
+        // Primeiro, carrega dados do localStorage se existirem
+        const localData = loadFromLocalStorage();
+        if (localData) {
+            appData = localData;
+            updateUI();
+        }
+
+        // Depois tenta carregar do servidor
         try {
             const response = await fetch(API_URL);
             if (!response.ok) throw new Error('Não foi possível carregar os dados.');
-            appData = await response.json();
-            updateUI();
+            const serverData = await response.json();
+            
+            // Se o servidor tem dados mais completos, usa eles
+            if (serverData && (serverData.usuario.nome || Object.keys(serverData.hospedagens).length > 0)) {
+                appData = serverData;
+                saveToLocalStorage(appData);
+                updateUI();
+            }
         } catch (error) {
-            console.error('Erro ao carregar dados:', error);
-            showFeedback('Erro ao carregar dados do servidor.', 'error');
+            console.error('Erro ao carregar dados do servidor:', error);
+            if (!localData) {
+                showFeedback('Usando dados locais. Conexão com servidor indisponível.', 'warning');
+            }
         }
     }
 
     /**
-     * Salva todos os dados da aplicação no servidor.
+     * Salva os dados no localStorage e tenta sincronizar com o servidor.
      */
     async function saveData() {
+        // Sempre salva no localStorage primeiro
+        saveToLocalStorage(appData);
+        
+        // Tenta salvar no servidor
         try {
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(appData),
             });
-            if (!response.ok) throw new Error('Não foi possível salvar os dados.');
-            return true;
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.saved) {
+                    showFeedback('Dados salvos com sucesso!', 'success');
+                } else {
+                    showFeedback('Dados salvos localmente no navegador.', 'info');
+                }
+                return true;
+            } else {
+                throw new Error('Erro na resposta do servidor');
+            }
         } catch (error) {
-            console.error('Erro ao salvar dados:', error);
-            showFeedback('Erro ao salvar dados no servidor.', 'error');
-            return false;
+            console.error('Erro ao salvar no servidor:', error);
+            showFeedback('Dados salvos localmente. Servidor indisponível.', 'warning');
+            return true; // Retorna true porque salvou no localStorage
+        }
+    }
+
+    /**
+     * Salva dados no localStorage do navegador.
+     */
+    function saveToLocalStorage(data) {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+        } catch (error) {
+            console.error('Erro ao salvar no localStorage:', error);
+        }
+    }
+
+    /**
+     * Carrega dados do localStorage do navegador.
+     */
+    function loadFromLocalStorage() {
+        try {
+            const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error('Erro ao carregar do localStorage:', error);
+            return null;
         }
     }
 
@@ -514,6 +569,10 @@ document.addEventListener('DOMContentLoaded', () => {
             element.className = 'fixed bottom-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
         } else if (type === 'error') {
             element.className = 'fixed bottom-20 right-6 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
+        } else if (type === 'warning') {
+            element.className = 'fixed bottom-20 right-6 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
+        } else if (type === 'info') {
+            element.className = 'fixed bottom-20 right-6 bg-blue-400 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
         } else {
             element.className = 'fixed bottom-20 right-6 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
         }

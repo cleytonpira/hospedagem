@@ -12,9 +12,9 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 
 ## Tecnologias
 
-- **Backend**: Node.js + Express
+- **Backend**: Vercel Serverless Functions (Node.js)
 - **Frontend**: HTML, CSS (Tailwind), JavaScript
-- **Armazenamento**: JSON file
+- **Armazenamento**: Híbrido (localStorage + API serverless)
 
 ## Deploy no Vercel
 
@@ -45,15 +45,34 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
    - O Vercel detectará automaticamente as configurações do `vercel.json`
    - O deploy será feito automaticamente
 
+### Arquitetura de Persistência
+
+**Problema Resolvido**: O Vercel não permite escrita de arquivos em serverless functions.
+
+**Solução Implementada**:
+- **Desenvolvimento Local**: Dados salvos em arquivo JSON (`dados.json`)
+- **Produção (Vercel)**: Dados salvos no localStorage do navegador
+- **API Serverless**: Gerencia a lógica de persistência automaticamente
+- **Sincronização**: Frontend tenta sincronizar com servidor, mas funciona offline
+
+**Benefícios**:
+- ✅ Funciona perfeitamente no Vercel
+- ✅ Dados persistem no navegador do usuário
+- ✅ Compatível com desenvolvimento local
+- ✅ Não requer banco de dados externo
+- ✅ Funciona offline após primeiro carregamento
+
 ### Estrutura do Projeto
 
 ```
+├── api/              # Serverless Functions
+│   └── hospedagem.js # API para gerenciar dados
 ├── public/           # Arquivos estáticos (frontend)
 │   ├── index.html
 │   ├── app.js
 │   └── style.css
-├── server.js         # Servidor Express
-├── dados.json        # Arquivo de dados
+├── server.js         # Servidor Express (dev local)
+├── dados.json        # Arquivo de dados (dev local)
 ├── package.json      # Dependências e scripts
 ├── vercel.json       # Configuração do Vercel
 └── README.md         # Este arquivo
@@ -65,7 +84,7 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 # Instalar dependências
 npm install
 
-# Executar em modo desenvolvimento
+# Executar servidor Express local (recomendado para desenvolvimento)
 npm run dev
 
 # Ou executar diretamente
@@ -73,6 +92,8 @@ npm start
 ```
 
 A aplicação estará disponível em `http://localhost:3000`
+
+**Nota**: Em desenvolvimento local, os dados são salvos no arquivo `dados.json`. No Vercel, são salvos no localStorage do navegador.
 
 ## Notas Importantes
 
