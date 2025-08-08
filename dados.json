@@ -1,0 +1,45 @@
+{
+  "usuario": {
+    "nome": "Alessandra",
+    "localPadrao": "Dani",
+    "valorDiaria": 100
+  },
+  "hospedagens": {
+    "2025-08": {
+      "dias": [
+        5,
+        6,
+        7,
+        12,
+        13
+      ],
+      "fechado": false
+    },
+    "2025-07": {
+      "dias": [
+        7,
+        8,
+        9,
+        12,
+        13,
+        14
+      ],
+      "fechado": true,
+      "valorCalculado": 600,
+      "valorPago": 650
+    },
+    "2025-06": {
+      "dias": [
+        7,
+        8,
+        9,
+        12,
+        13,
+        14
+      ],
+      "fechado": true,
+      "valorCalculado": 600,
+      "valorPago": 500
+    }
+  }
+}

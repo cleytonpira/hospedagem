@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Hospedagem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="flex justify-between items-center mb-8">
+            <div class="text-center flex-grow">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Controle de Hospedagem</h1>
+                <p id="welcome-message" class="text-lg text-gray-600 mt-2">Bem-vindo(a)!</p>
+            </div>
+            <button id="open-settings-modal" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+        </header>
+
+        <main>
+            <!-- Botão Flutuante para Registrar Diária -->
+            <button id="log-stay-button" class="fixed bottom-6 right-6 bg-blue-600 text-white font-bold p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-300 z-40 group" title="Registrar diária de ontem">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                <!-- Tooltip -->
+                <span class="absolute bottom-full right-0 mb-2 px-3 py-1 text-sm text-white bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                    Registrar diária de ontem
+                </span>
+            </button>
+            
+            <!-- Feedback para o botão flutuante -->
+            <div id="log-feedback" class="fixed bottom-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 opacity-0 translate-y-2 z-30"></div>
+
+            <!-- Seção de Resumos Mensais -->
+            <section class="mb-8">
+                <h2 class="text-2xl font-bold mb-4 text-center">Resumos</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Coluna da Esquerda: Meses Anteriores -->
+                    <div class="lg:col-span-1">
+                        <div id="historical-months" class="space-y-3"></div>
+                    </div>
+                    
+                    <!-- Coluna da Direita: Mês Principal -->
+                    <div class="lg:col-span-2">
+                        <!-- Resumo Mês Principal -->
+                        <div id="current-month-summary" class="bg-white p-6 rounded-lg shadow-md"></div>
+                        
+                        <!-- Estatísticas Gerais -->
+                        <div id="general-statistics" class="bg-white p-6 rounded-lg shadow-md mt-6"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-gray-500 text-sm">
+            <p>&copy; 2025 - App de Controle de Hospedagem. Fase 1 (MVP).</p>
+        </footer>
+    </div>
+
+    <!-- Modal de Configurações -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Configurações</h2>
+                <button id="close-settings-modal" class="text-gray-500 hover:text-gray-800">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="user-name" class="block text-sm font-medium text-gray-700">Seu Nome</label>
+                    <input type="text" id="user-name" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="location-name" class="block text-sm font-medium text-gray-700">Local Padrão</label>
+                    <input type="text" id="location-name" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="daily-rate" class="block text-sm font-medium text-gray-700">Valor da Diária (R$)</label>
+                    <input type="number" id="daily-rate" placeholder="Ex: 150.00" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end items-center">
+                <span id="saved-feedback" class="text-green-600 mr-4 opacity-0">Salvo!</span>
+                <button id="save-settings-button" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300">
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

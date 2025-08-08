@@ -1,0 +1,268 @@
+/* Estilos Globais */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Feedback de Ações */
+.saved-feedback {
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* Componente Acordeão */
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out;
+}
+
+.accordion-content.open {
+    max-height: 500px; /* Altura suficiente para o conteúdo */
+}
+
+.accordion-toggle .transform {
+    transition: transform 0.3s ease;
+}
+
+.accordion-toggle.open .transform {
+    transform: rotate(180deg);
+}
+
+
+/* Calendário */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.calendar-header {
+    font-weight: 600;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #4a5568;
+}
+
+.calendar-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.25rem;
+    width: 2.25rem;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    margin: 0 auto;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-day:hover:not(.empty) {
+    background-color: #e2e8f0;
+}
+
+.calendar-day.has-stay {
+    background-color: #48bb78; /* Verde */
+    color: white;
+    font-weight: 600;
+}
+
+.calendar-day.has-stay:hover {
+    background-color: #38a169;
+}
+
+/* Calendário Expandido */
+.calendar-expanded .calendar-grid {
+    gap: 6px;
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+.calendar-expanded .calendar-day {
+    height: 2.5rem;
+    width: 2.5rem;
+    font-size: 0.9rem;
+}
+
+.calendar-expanded .calendar-header {
+    font-size: 0.85rem;
+    padding-bottom: 0.25rem;
+}
+
+/* Reduzir tamanho das divs de resumo no desktop */
+#current-month-summary,
+#previous-month-summary {
+    padding: 1.25rem;
+}
+
+/* Lista Compacta de Meses Históricos */
+.historical-month-item {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.historical-month-item:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.historical-month-item.closed {
+    background-color: #f0fff4;
+    border-left: 4px solid #48bb78;
+}
+
+.historical-month-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.historical-month-stats {
+    font-size: 0.8rem;
+    color: #718096;
+}
+
+.historical-month-value {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #2d3748;
+    margin-top: 0.25rem;
+}
+
+/* Estilos específicos para o primeiro mês do histórico (expandido) */
+#historical-months .calendar-expanded h2 {
+    font-size: 1.5rem !important; /* Reduzir de text-2xl para text-xl */
+}
+
+#historical-months .calendar-expanded .text-2xl {
+    font-size: 1.25rem !important; /* Reduzir estatísticas de text-2xl para text-xl */
+}
+
+#historical-months .calendar-expanded .text-sm {
+    font-size: 0.75rem !important; /* Reduzir labels das estatísticas */
+}
+
+/* Estilos para a modal de configurações */
+.hidden {
+    display: none;
+}
+
+.month-closed .accordion-toggle {
+    background-color: #e6fffa; /* Verde bem claro */
+}
+
+/* Responsividade Mobile */
+@media (max-width: 1023px) {
+    /* Reorganizar layout para mobile */
+    .lg\:col-span-1,
+    .lg\:col-span-2 {
+        grid-column: span 1;
+    }
+    
+    /* Reduzir tamanho das divs de resumo */
+    #current-month-summary,
+    #previous-month-summary {
+        padding: 1rem !important;
+    }
+    
+    /* Calendário expandido menor no mobile */
+    .calendar-expanded .calendar-grid {
+        gap: 4px;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+    }
+    
+    .calendar-expanded .calendar-day {
+        height: 2rem;
+        width: 2rem;
+        font-size: 0.8rem;
+    }
+    
+    .calendar-expanded .calendar-header {
+        font-size: 0.75rem;
+        padding-bottom: 0.2rem;
+    }
+    
+    /* Reduzir espaçamentos gerais */
+    .space-y-6 > * + * {
+        margin-top: 1rem !important;
+    }
+    
+    /* Ajustar grid para mobile - histórico abaixo */
+    .grid.grid-cols-1.lg\:grid-cols-3 {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* Mês atual e anterior primeiro */
+    .lg\:col-span-2 {
+        order: 1;
+    }
+    
+    /* Histórico por último */
+    .lg\:col-span-1 {
+        order: 2;
+        margin-top: 1.5rem;
+    }
+    
+    /* Reduzir tamanho dos botões no mobile */
+    .calendar-expanded button {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.875rem !important;
+        margin-top: 1rem !important;
+    }
+    
+    /* Reduzir estatísticas no mobile */
+    .calendar-expanded .text-2xl {
+        font-size: 1.25rem !important;
+    }
+    
+    .calendar-expanded .mb-4 {
+        margin-bottom: 0.75rem !important;
+    }
+}
+
+@media (max-width: 640px) {
+    /* Ajustes extras para telas muito pequenas */
+    #current-month-summary,
+    #previous-month-summary {
+        padding: 0.75rem !important;
+        margin: 0.5rem !important;
+    }
+    
+    .calendar-expanded .calendar-day {
+        height: 1.75rem;
+        width: 1.75rem;
+        font-size: 0.75rem;
+    }
+    
+    .calendar-expanded .calendar-grid {
+        gap: 3px;
+    }
+    
+    /* Botão flutuante menor */
+    #log-stay-button {
+        bottom: 1rem !important;
+        right: 1rem !important;
+        padding: 0.75rem !important;
+    }
+    
+    #log-stay-button svg {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+    }
+    
+    /* Feedback menor */
+    #log-feedback {
+        bottom: 4rem !important;
+        right: 1rem !important;
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.875rem !important;
+    }
+}
