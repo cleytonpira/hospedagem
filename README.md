@@ -15,41 +15,8 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 - **Backend**: Node.js + Express
 - **Frontend**: HTML, CSS (Tailwind), JavaScript
 - **Armazenamento**: JSON file
-- **Arquitetura**: Módulo compartilhado para lógica de negócio
-
-## Estrutura do Projeto
-
-```
-├── public/
-│   ├── index.html             # Interface principal
-│   ├── app.js                 # Lógica do frontend
-│   └── style.css              # Estilos
-├── server.js                  # Servidor Express com todas as funcionalidades
-├── vercel.json                # Configuração do Vercel (apenas arquivos estáticos)
-└── dados.json                 # Arquivo de dados (ignorado pelo Git)
-```
-
-### Servidor Unificado
-
-O arquivo `server.js` contém toda a lógica da aplicação:
-- **Funções de dados**: `readData()`, `saveData()`
-- **Lógica de negócio**: `registrarDiariaOntem()`, `alternarDiariaEspecifica()`
-- **Endpoints da API**: GET/POST para `/api/hospedagem` e rotas específicas
-- **Servidor estático**: Serve arquivos da pasta `public/`
-
-Esta arquitetura simplificada mantém toda a funcionalidade em um único arquivo, facilitando a manutenção e o desenvolvimento.
 
 ## Deploy no Vercel
-
-### Arquitetura Serverless
-
-Esta aplicação está configurada para deploy como **serverless function** no Vercel:
-
-- **Frontend**: Arquivos estáticos servidos da pasta `public/`
-- **Backend**: Serverless function (`server.js`) com API completa
-- **Dados**: Persistência em memória (temporária) no Vercel, arquivo JSON local
-
-**⚠️ Limitação Importante**: No Vercel, os dados são armazenados apenas em memória e **não são persistentes**. Cada nova requisição pode reinicializar os dados. Para persistência real, considere integrar um banco de dados como MongoDB, PostgreSQL ou Redis.
 
 ### Pré-requisitos
 
@@ -76,31 +43,19 @@ Esta aplicação está configurada para deploy como **serverless function** no V
 
 3. **Configuração Automática**
    - O Vercel detectará automaticamente as configurações do `vercel.json`
-   - O `server.js` será automaticamente configurado como serverless function
-   - As rotas `/api/*` serão direcionadas para a function
    - O deploy será feito automaticamente
-
-4. **Verificação**
-   - Acesse sua URL do Vercel
-   - Teste as funcionalidades da aplicação
-   - **Lembre-se**: Os dados não são persistentes entre sessões
 
 ### Estrutura do Projeto
 
 ```
-hospedagem-backend/
-├── api/              # Serverless functions do Vercel
-│   └── hospedagem.js # API principal para dados de hospedagem
-├── public/           # Arquivos estáticos (HTML, CSS, JS)
+├── public/           # Arquivos estáticos (frontend)
 │   ├── index.html
-│   ├── style.css
-│   └── app.js
-├── server.js         # Servidor Express (para desenvolvimento local)
-├── dados.json        # Arquivo de dados (criado automaticamente)
-├── package.json      # Dependências do projeto
+│   ├── app.js
+│   └── style.css
+├── server.js         # Servidor Express
+├── dados.json        # Arquivo de dados
+├── package.json      # Dependências e scripts
 ├── vercel.json       # Configuração do Vercel
-├── .gitignore        # Arquivos ignorados pelo Git
-├── .env.example      # Exemplo de variáveis de ambiente
 └── README.md         # Este arquivo
 ```
 

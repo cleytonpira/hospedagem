@@ -395,16 +395,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleLogStay() {
         showFeedback('', 'clear'); // Limpa feedback anterior
         try {
-            // Registrar diária para ontem
-            const response = await fetch(API_URL, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ action: 'registrar-diaria' }) 
-            });
+            const response = await fetch(`${API_URL}/registrar-diaria`, { method: 'POST' });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'Erro desconhecido.');
 
-            showFeedback(result.message, 'success');
+            showFeedback('Diária registrada com sucesso!', 'success');
             await loadData(); // Recarrega tudo para garantir consistência
         } catch (error) {
             console.error('Erro ao registrar diária:', error);
@@ -476,7 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const fullDate = `${year}-${month}-${day}`;
 
         try {
-            // Usar a rota específica para registrar/remover diária
             const response = await fetch(`${API_URL}/registrar-diaria-especifica`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -486,14 +480,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.message || 'Erro ao alterar diária.');
+                throw new Error(result.message || 'Erro ao registrar diária.');
             }
 
             showFeedback(result.message, 'success');
             await loadData(); // Recarrega os dados para atualizar a UI
 
         } catch (error) {
-            console.error('Erro ao alterar diária específica:', error);
+            console.error('Erro ao registrar diária específica:', error);
             showFeedback(error.message, 'error');
         }
     }
