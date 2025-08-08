@@ -10,3 +10,11 @@ yarn-error.log*
 .DS_Store
 .vscode/
 *.log
+
+# SQLite database files
+*.db
+*.sqlite
+*.sqlite3
+
+# JSON backup files
+*.json.backup

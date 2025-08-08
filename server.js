@@ -1,57 +1,62 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const Database = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'dados.json');
+
+// Instância do banco de dados
+const db = new Database();
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Função para migrar dados do JSON para SQLite (se necessário)
+async function migrateFromJson() {
+    const dataFile = path.join(__dirname, 'dados.json');
+    
+    if (fs.existsSync(dataFile)) {
+        try {
+            console.log('Migrando dados do arquivo JSON para SQLite...');
+            const jsonData = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+            await db.saveAllData(jsonData);
+            
+            // Renomear arquivo JSON para backup
+            fs.renameSync(dataFile, dataFile + '.backup');
+            console.log('Migração concluída. Arquivo JSON renomeado para dados.json.backup');
+        } catch (error) {
+            console.error('Erro na migração:', error);
+        }
+    }
+}
+
 // Endpoint para obter todos os dados
-app.get('/api/hospedagem', (req, res) => {
-    fs.readFile(DATA_FILE, 'utf8', (err, data) => {
-        if (err) {
-            if (err.code === 'ENOENT') { // Se o arquivo não existe, retorna dados iniciais
-                const initialData = {
-                    usuario: { nome: '', localPadrao: '', valorDiaria: 0 },
-                    hospedagens: {}
-                };
-                return res.json(initialData);
-            }
-            return res.status(500).json({ error: 'Erro ao ler os dados.' });
-        }
-        if (!data) { // Se o arquivo está vazio, retorna dados iniciais
-            const initialData = {
-                usuario: { nome: '', localPadrao: '', valorDiaria: 0 },
-                hospedagens: {}
-            };
-            return res.json(initialData);
-        }
-        res.json(JSON.parse(data));
-    });
+app.get('/api/hospedagem', async (req, res) => {
+    try {
+        const data = await db.getAllData();
+        res.json(data);
+    } catch (error) {
+        console.error('Erro ao obter dados:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
 });
 
 // Endpoint para salvar os dados
-app.post('/api/hospedagem', (req, res) => {
-    const newData = req.body;
-    fs.writeFile(DATA_FILE, JSON.stringify(newData, null, 2), 'utf8', (err) => {
-        if (err) {
-            return res.status(500).json({ error: 'Erro ao salvar os dados.' });
-        }
+app.post('/api/hospedagem', async (req, res) => {
+    try {
+        await db.saveAllData(req.body);
         res.json({ message: 'Dados salvos com sucesso!' });
-    });
+    } catch (error) {
+        console.error('Erro ao salvar dados:', error);
+        res.status(500).json({ error: 'Erro ao salvar dados' });
+    }
 });
 
 // Endpoint para registrar uma diária (dia anterior)
-app.post('/api/hospedagem/registrar-diaria', (req, res) => {
-    fs.readFile(DATA_FILE, 'utf8', (err, data) => {
-        if (err && err.code !== 'ENOENT') {
-            return res.status(500).json({ error: 'Erro ao ler os dados.' });
-        }
-
-        const appData = (data && data.trim()) ? JSON.parse(data) : { usuario: {}, hospedagens: {} };
+app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
+    try {
+        const appData = await db.getAllData();
 
         const today = new Date();
         const yesterday = new Date(today);
@@ -76,29 +81,24 @@ app.post('/api/hospedagem/registrar-diaria', (req, res) => {
 
         appData.hospedagens[monthKey].dias.push(day);
 
-        fs.writeFile(DATA_FILE, JSON.stringify(appData, null, 2), 'utf8', (writeErr) => {
-            if (writeErr) {
-                return res.status(500).json({ error: 'Erro ao salvar a nova diária.' });
-            }
-            res.status(201).json({ message: 'Diária registrada com sucesso!' });
-        });
-    });
+        await db.saveAllData(appData);
+        res.status(201).json({ message: 'Diária registrada com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao registrar diária:', error);
+        res.status(500).json({ error: 'Erro ao salvar a nova diária.' });
+    }
 });
 
 // Endpoint para registrar ou remover uma diária em um dia específico (toggle)
-app.post('/api/hospedagem/registrar-diaria-especifica', (req, res) => {
+app.post('/api/hospedagem/registrar-diaria-especifica', async (req, res) => {
     const { date } = req.body; // Espera uma data no formato "YYYY-MM-DD"
 
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         return res.status(400).json({ message: 'Formato de data inválido. Use YYYY-MM-DD.' });
     }
 
-    fs.readFile(DATA_FILE, 'utf8', (err, data) => {
-        if (err && err.code !== 'ENOENT') {
-            return res.status(500).json({ error: 'Erro ao ler os dados.' });
-        }
-
-        const appData = (data && data.trim()) ? JSON.parse(data) : { usuario: {}, hospedagens: {} };
+    try {
+        const appData = await db.getAllData();
 
         const [year, month, day] = date.split('-').map(Number);
         const monthKey = `${year}-${String(month).padStart(2, '0')}`;
@@ -125,18 +125,30 @@ app.post('/api/hospedagem/registrar-diaria-especifica', (req, res) => {
             message = 'Diária registrada com sucesso!';
         }
 
-        fs.writeFile(DATA_FILE, JSON.stringify(appData, null, 2), 'utf8', (writeErr) => {
-            if (writeErr) {
-                return res.status(500).json({ error: 'Erro ao salvar a alteração da diária.' });
-            }
-            res.status(200).json({ message });
-        });
-    });
+        await db.saveAllData(appData);
+        res.status(200).json({ message });
+    } catch (error) {
+        console.error('Erro ao alterar diária:', error);
+        res.status(500).json({ error: 'Erro ao salvar a alteração da diária.' });
+    }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+// Inicializar banco de dados e iniciar servidor
+async function startServer() {
+    try {
+        await db.connect();
+        await migrateFromJson();
+        
+        app.listen(PORT, () => {
+            console.log(`Servidor rodando na porta ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Erro ao inicializar servidor:', error);
+        process.exit(1);
+    }
+}
+
+startServer();
 
 // Exportar o app para Vercel
 module.exports = app;

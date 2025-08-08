@@ -12,9 +12,10 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 
 ## Tecnologias
 
-- **Backend**: Vercel Serverless Functions (Node.js)
+- **Backend**: Node.js + Express
 - **Frontend**: HTML, CSS (Tailwind), JavaScript
-- **Armazenamento**: Híbrido (localStorage + API serverless)
+- **Banco de Dados**: SQLite3
+- **Deploy**: Vercel
 
 ## Deploy no Vercel
 
@@ -45,34 +46,15 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
    - O Vercel detectará automaticamente as configurações do `vercel.json`
    - O deploy será feito automaticamente
 
-### Arquitetura de Persistência
-
-**Problema Resolvido**: O Vercel não permite escrita de arquivos em serverless functions.
-
-**Solução Implementada**:
-- **Desenvolvimento Local**: Dados salvos em arquivo JSON (`dados.json`)
-- **Produção (Vercel)**: Dados salvos no localStorage do navegador
-- **API Serverless**: Gerencia a lógica de persistência automaticamente
-- **Sincronização**: Frontend tenta sincronizar com servidor, mas funciona offline
-
-**Benefícios**:
-- ✅ Funciona perfeitamente no Vercel
-- ✅ Dados persistem no navegador do usuário
-- ✅ Compatível com desenvolvimento local
-- ✅ Não requer banco de dados externo
-- ✅ Funciona offline após primeiro carregamento
-
 ### Estrutura do Projeto
 
 ```
-├── api/              # Serverless Functions
-│   └── hospedagem.js # API para gerenciar dados
 ├── public/           # Arquivos estáticos (frontend)
 │   ├── index.html
 │   ├── app.js
 │   └── style.css
-├── server.js         # Servidor Express (dev local)
-├── dados.json        # Arquivo de dados (dev local)
+├── server.js         # Servidor Express
+├── dados.json        # Arquivo de dados
 ├── package.json      # Dependências e scripts
 ├── vercel.json       # Configuração do Vercel
 └── README.md         # Este arquivo
@@ -84,33 +66,41 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 # Instalar dependências
 npm install
 
-# Executar servidor Express local (recomendado para desenvolvimento)
+# Executar em modo desenvolvimento
 npm run dev
 
 # Ou executar diretamente
 npm start
 ```
 
+**Nota**: Na primeira execução, se você tiver um arquivo `dados.json`, ele será automaticamente migrado para SQLite.
+
 A aplicação estará disponível em `http://localhost:3000`
 
-**Nota**: Em desenvolvimento local, os dados são salvos no arquivo `dados.json`. No Vercel, são salvos no localStorage do navegador.
+## 🗄️ Banco de Dados
 
-## Notas Importantes
+A aplicação utiliza **SQLite3** para armazenamento de dados, oferecendo:
 
-⚠️ **IMPORTANTE - Limitações no Vercel:**
-- O Vercel é uma plataforma serverless, onde os arquivos não persistem entre execuções
-- O arquivo `dados.json` será perdido a cada novo deploy ou reinicialização
-- **Para uso em produção no Vercel, é necessário integrar com um banco de dados**
+- ✅ **Desenvolvimento Local**: Banco SQLite local (`hospedagem.db`)
+- ✅ **Migração Automática**: Converte dados do `dados.json` automaticamente
+- ✅ **Backup Automático**: Arquivo JSON original é preservado como `.backup`
 
-### Alternativas para Persistência de Dados:
+### Migração Automática
 
-1. **Vercel KV** (Redis)
-2. **PlanetScale** (MySQL)
-3. **Supabase** (PostgreSQL)
-4. **MongoDB Atlas**
-5. **Firebase Firestore**
+Quando você executar a aplicação pela primeira vez após a atualização:
+1. O sistema detectará o arquivo `dados.json` existente
+2. Migrará automaticamente todos os dados para SQLite
+3. Renomeará o arquivo original para `dados.json.backup`
+4. Continuará funcionando normalmente com o banco SQLite
 
-### Para Desenvolvimento Local:
-- Os dados são armazenados em arquivo JSON local
-- O arquivo `dados.json` será criado automaticamente na primeira execução
-- Funciona perfeitamente para desenvolvimento e testes
+### Para Produção no Vercel
+
+Para deploy em produção, recomenda-se usar um banco de dados externo:
+1. **Vercel Postgres**: Banco PostgreSQL da Vercel
+2. **PlanetScale**: MySQL serverless
+3. **Supabase**: PostgreSQL com interface amigável
+4. **Railway**: PostgreSQL/MySQL simples
+
+Para implementar:
+1. Modifique `database.js` para usar o banco escolhido
+2. Adicione as variáveis de ambiente no Vercel

@@ -1,19 +1,15 @@
 {
   "version": 2,
-  "functions": {
-    "api/hospedagem.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "routes": [
+  "builds": [
     {
-      "src": "/api/hospedagem",
-      "dest": "/api/hospedagem.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "src": "./server.js",
+      "use": "@vercel/node"
     }
   ],
-  "cleanUrls": true
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ]
 }
