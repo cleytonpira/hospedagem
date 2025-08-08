@@ -80,6 +80,24 @@ body {
     background-color: #38a169;
 }
 
+/* Dia atual */
+.calendar-day.current-day {
+    background-color: #4a5568; /* Cinza escuro */
+    color: white;
+    font-weight: 600;
+    border: 2px solid #2d3748;
+}
+
+.calendar-day.current-day:hover {
+    background-color: #2d3748;
+}
+
+/* Dia atual com hospedagem */
+.calendar-day.has-stay.current-day {
+    background-color: #38a169; /* Verde mais escuro */
+    border: 2px solid #2f855a;
+}
+
 /* Feedback visual para toque em dispositivos móveis */
 .calendar-day.touched {
     background-color: #cbd5e0;

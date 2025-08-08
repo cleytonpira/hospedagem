@@ -61,15 +61,31 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Carrega os dados principais do servidor.
      */
-    async function loadData() {
+    async function loadData(retryCount = 0) {
         try {
-            const response = await fetch(API_URL);
+            const response = await fetch(API_URL, {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
             if (!response.ok) throw new Error('Não foi possível carregar os dados.');
             appData = await response.json();
             updateUI();
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
-            showFeedback('Erro ao carregar dados do servidor.', 'error');
+            
+            // Retry automático até 3 tentativas com delay crescente
+            if (retryCount < 3) {
+                console.log(`Tentativa ${retryCount + 1} de recarregamento em ${(retryCount + 1) * 1000}ms...`);
+                setTimeout(() => {
+                    loadData(retryCount + 1);
+                }, (retryCount + 1) * 1000);
+            } else {
+                showFeedback('Erro ao carregar dados do servidor. Tente recarregar a página.', 'error');
+            }
         }
     }
 
@@ -389,12 +405,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        
+        // Obter data atual para destacar o dia
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+        const currentDay = today.getDate();
 
         let html = `<div class="calendar-grid" data-year="${year}" data-month="${month + 1}">`;
         weekDays.forEach(day => { html += `<div class="calendar-header">${day}</div>`; });
         for (let i = 0; i < firstDay; i++) html += '<div class="calendar-day empty"></div>';
         for (let day = 1; day <= daysInMonth; day++) {
-            const dayClass = hostedDays.includes(day) ? 'calendar-day has-stay' : 'calendar-day';
+            let dayClass = 'calendar-day';
+            if (hostedDays.includes(day)) {
+                dayClass += ' has-stay';
+            }
+            if (isCurrentMonth && day === currentDay) {
+                dayClass += ' current-day';
+            }
             html += `<div class="${dayClass}" data-day="${day}">${day}</div>`;
         }
         html += '</div>';

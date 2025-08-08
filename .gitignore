@@ -12,7 +12,7 @@ yarn-error.log*
 *.log
 
 # SQLite database files
-
+*.db
 *.sqlite
 *.sqlite3
 
