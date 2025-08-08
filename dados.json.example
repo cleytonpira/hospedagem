@@ -1,0 +1,26 @@
+{
+  "usuario": {
+    "nome": "",
+    "localPadrao": "",
+    "valorDiaria": 0
+  },
+  "hospedagens": {
+    "exemplo": {
+      "id": "exemplo",
+      "nomeHospede": "Nome do Hóspede",
+      "local": "Local da Hospedagem",
+      "dataInicio": "2024-01-01",
+      "dataFim": "2024-01-07",
+      "valorDiaria": 100,
+      "observacoes": "Observações sobre a hospedagem",
+      "fechado": false,
+      "diarias": {
+        "2024-01-01": {
+          "data": "2024-01-01",
+          "pago": true,
+          "valor": 100
+        }
+      }
+    }
+  }
+}
