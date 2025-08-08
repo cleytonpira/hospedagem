@@ -395,7 +395,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleLogStay() {
         showFeedback('', 'clear'); // Limpa feedback anterior
         try {
-            const response = await fetch(`${API_URL}/registrar-diaria`, { method: 'POST' });
+            // Registrar diária será tratado via POST na API principal
+            const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(appData) });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'Erro desconhecido.');
 
@@ -471,10 +472,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const fullDate = `${year}-${month}-${day}`;
 
         try {
-            const response = await fetch(`${API_URL}/registrar-diaria-especifica`, {
+            // Registrar diária específica será tratado via POST na API principal
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date: fullDate }),
+                body: JSON.stringify({ ...appData, action: 'registrar-diaria-especifica', date: fullDate }),
             });
 
             const result = await response.json();
