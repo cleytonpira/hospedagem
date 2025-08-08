@@ -79,23 +79,36 @@ A aplicação estará disponível em `http://localhost:3000`
 
 ## 🗄️ Banco de Dados
 
-A aplicação utiliza **SQLite3** para armazenamento de dados, oferecendo:
+A aplicação utiliza **SQLite3** com configuração adaptativa:
 
-- ✅ **Desenvolvimento Local**: Banco SQLite local (`hospedagem.db`)
+- ✅ **Desenvolvimento Local**: Banco SQLite persistente (`hospedagem.db`)
+- ✅ **Produção (Vercel)**: Banco SQLite em memória (temporário)
 - ✅ **Migração Automática**: Converte dados do `dados.json` automaticamente
 - ✅ **Backup Automático**: Arquivo JSON original é preservado como `.backup`
 
+### Configuração por Ambiente
+
+**Desenvolvimento Local:**
+- Usa arquivo `hospedagem.db` para persistência
+- Dados são mantidos entre reinicializações
+- Migração automática do `dados.json`
+
+**Produção (Vercel):**
+- Usa SQLite em memória (`:memory:`)
+- Dados são temporários (perdidos a cada reinicialização)
+- Adequado para demonstrações e testes
+
 ### Migração Automática
 
-Quando você executar a aplicação pela primeira vez após a atualização:
+Quando você executar a aplicação pela primeira vez:
 1. O sistema detectará o arquivo `dados.json` existente
 2. Migrará automaticamente todos os dados para SQLite
 3. Renomeará o arquivo original para `dados.json.backup`
 4. Continuará funcionando normalmente com o banco SQLite
 
-### Para Produção no Vercel
+### Para Produção com Persistência
 
-Para deploy em produção, recomenda-se usar um banco de dados externo:
+Para dados persistentes em produção, integre com:
 1. **Vercel Postgres**: Banco PostgreSQL da Vercel
 2. **PlanetScale**: MySQL serverless
 3. **Supabase**: PostgreSQL com interface amigável

@@ -1,8 +1,8 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Caminho do banco de dados
-const DB_PATH = path.join(__dirname, 'hospedagem.db');
+// Caminho do banco de dados - usar memória em produção (Vercel)
+const DB_PATH = process.env.NODE_ENV === 'production' ? ':memory:' : path.join(__dirname, 'hospedagem.db');
 
 class Database {
     constructor() {
@@ -17,7 +17,8 @@ class Database {
                     console.error('Erro ao conectar com o banco de dados:', err.message);
                     reject(err);
                 } else {
-                    console.log('Conectado ao banco de dados SQLite.');
+                    const dbType = DB_PATH === ':memory:' ? 'SQLite em memória (produção)' : 'SQLite local';
+                    console.log(`Conectado ao banco de dados ${dbType}.`);
                     this.initTables().then(resolve).catch(reject);
                 }
             });
