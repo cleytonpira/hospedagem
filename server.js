@@ -6,11 +6,24 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'dados.json');
 
+// Dados em memória para ambiente serverless (Vercel)
+let memoryData = {
+    usuario: { nome: '', localPadrao: '', valorDiaria: 0 },
+    hospedagens: {}
+};
+
+// Detectar se estamos no Vercel
+const isVercel = process.env.VERCEL || process.env.NOW_REGION;
+
 /**
- * Função para ler dados do arquivo JSON
+ * Função para ler dados do arquivo JSON ou memória
  * @returns {Object} Dados da aplicação
  */
 function readData() {
+    if (isVercel) {
+        return memoryData;
+    }
+    
     try {
         if (!fs.existsSync(DATA_FILE)) {
             return {
@@ -32,11 +45,16 @@ function readData() {
 }
 
 /**
- * Função para salvar dados no arquivo JSON
+ * Função para salvar dados no arquivo JSON ou memória
  * @param {Object} data - Dados para salvar
  * @returns {boolean} Sucesso da operação
  */
 function saveData(data) {
+    if (isVercel) {
+        memoryData = { ...data };
+        return true;
+    }
+    
     try {
         fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
         return true;

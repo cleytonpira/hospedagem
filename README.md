@@ -41,15 +41,15 @@ Esta arquitetura simplificada mantém toda a funcionalidade em um único arquivo
 
 ## Deploy no Vercel
 
-### Arquitetura de Arquivos Estáticos
+### Arquitetura Serverless
 
-Esta aplicação está configurada para deploy como **arquivos estáticos** no Vercel:
+Esta aplicação está configurada para deploy como **serverless function** no Vercel:
 
 - **Frontend**: Arquivos estáticos servidos da pasta `public/`
-- **Backend**: Para desenvolvimento local apenas (`server.js`)
-- **Dados**: Persistência via arquivo JSON (apenas local)
+- **Backend**: Serverless function (`server.js`) com API completa
+- **Dados**: Persistência em memória (temporária) no Vercel, arquivo JSON local
 
-**Nota**: O backend (`server.js`) é usado apenas para desenvolvimento local. No Vercel, apenas os arquivos estáticos da pasta `public/` são servidos.
+**⚠️ Limitação Importante**: No Vercel, os dados são armazenados apenas em memória e **não são persistentes**. Cada nova requisição pode reinicializar os dados. Para persistência real, considere integrar um banco de dados como MongoDB, PostgreSQL ou Redis.
 
 ### Pré-requisitos
 
@@ -76,8 +76,14 @@ Esta aplicação está configurada para deploy como **arquivos estáticos** no V
 
 3. **Configuração Automática**
    - O Vercel detectará automaticamente as configurações do `vercel.json`
-   - A API será automaticamente configurada como serverless function
+   - O `server.js` será automaticamente configurado como serverless function
+   - As rotas `/api/*` serão direcionadas para a function
    - O deploy será feito automaticamente
+
+4. **Verificação**
+   - Acesse sua URL do Vercel
+   - Teste as funcionalidades da aplicação
+   - **Lembre-se**: Os dados não são persistentes entre sessões
 
 ### Estrutura do Projeto
 
