@@ -200,6 +200,112 @@ class Database {
         });
     }
 
+    // === MÉTODOS CRUD PARA EDITOR DE BANCO ===
+    
+    // Obter todas as tabelas e seus dados
+    getAllTables() {
+        return new Promise((resolve, reject) => {
+            const tables = {};
+            
+            // Obter dados da tabela usuario
+            this.db.all('SELECT * FROM usuario', (err, userRows) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                
+                tables.usuario = userRows;
+                
+                // Obter dados da tabela hospedagem
+                this.db.all('SELECT * FROM hospedagem', (err, hospedagemRows) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    
+                    tables.hospedagem = hospedagemRows;
+                    resolve(tables);
+                });
+            });
+        });
+    }
+    
+    // Inserir registro em uma tabela
+    insertRecord(tableName, data) {
+        return new Promise((resolve, reject) => {
+            if (tableName === 'usuario') {
+                const { nome, localPadrao, valorDiaria } = data;
+                this.db.run(
+                    'INSERT INTO usuario (nome, localPadrao, valorDiaria) VALUES (?, ?, ?)',
+                    [nome, localPadrao, valorDiaria],
+                    function(err) {
+                        if (err) reject(err);
+                        else resolve({ id: this.lastID });
+                    }
+                );
+            } else if (tableName === 'hospedagem') {
+                const { mesAno, dias, fechado, valorCalculado, valorPago } = data;
+                this.db.run(
+                    'INSERT INTO hospedagem (mesAno, dias, fechado, valorCalculado, valorPago) VALUES (?, ?, ?, ?, ?)',
+                    [mesAno, dias, fechado ? 1 : 0, valorCalculado, valorPago],
+                    function(err) {
+                        if (err) reject(err);
+                        else resolve({ id: this.lastID });
+                    }
+                );
+            } else {
+                reject(new Error('Tabela não suportada'));
+            }
+        });
+    }
+    
+    // Atualizar registro em uma tabela
+    updateRecord(tableName, id, data) {
+        return new Promise((resolve, reject) => {
+            if (tableName === 'usuario') {
+                const { nome, localPadrao, valorDiaria } = data;
+                this.db.run(
+                    'UPDATE usuario SET nome = ?, localPadrao = ?, valorDiaria = ? WHERE id = ?',
+                    [nome, localPadrao, valorDiaria, id],
+                    function(err) {
+                        if (err) reject(err);
+                        else resolve({ changes: this.changes });
+                    }
+                );
+            } else if (tableName === 'hospedagem') {
+                const { mesAno, dias, fechado, valorCalculado, valorPago } = data;
+                this.db.run(
+                    'UPDATE hospedagem SET mesAno = ?, dias = ?, fechado = ?, valorCalculado = ?, valorPago = ? WHERE id = ?',
+                    [mesAno, dias, fechado ? 1 : 0, valorCalculado, valorPago, id],
+                    function(err) {
+                        if (err) reject(err);
+                        else resolve({ changes: this.changes });
+                    }
+                );
+            } else {
+                reject(new Error('Tabela não suportada'));
+            }
+        });
+    }
+    
+    // Deletar registro de uma tabela
+    deleteRecord(tableName, id) {
+        return new Promise((resolve, reject) => {
+            if (tableName === 'usuario' || tableName === 'hospedagem') {
+                this.db.run(
+                    `DELETE FROM ${tableName} WHERE id = ?`,
+                    [id],
+                    function(err) {
+                        if (err) reject(err);
+                        else resolve({ changes: this.changes });
+                    }
+                );
+            } else {
+                reject(new Error('Tabela não suportada'));
+            }
+        });
+    }
+
     // Fechar conexão
     close() {
         if (this.db) {

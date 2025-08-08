@@ -3,6 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsModal = document.getElementById('settings-modal');
     const openSettingsModalButton = document.getElementById('open-settings-modal');
     const closeSettingsModalButton = document.getElementById('close-settings-modal');
+    const closeMonthModal = document.getElementById('close-month-modal');
+    const closeMonthModalBtn = document.getElementById('close-month-modal-btn');
+    const closeMonthNameSpan = document.getElementById('close-month-name');
+    const calculatedValueSpan = document.getElementById('calculated-value');
+    const paidAmountInput = document.getElementById('paid-amount');
+    const cancelCloseMonthBtn = document.getElementById('cancel-close-month');
+    const confirmCloseMonthBtn = document.getElementById('confirm-close-month');
     const userNameInput = document.getElementById('user-name');
     const locationNameInput = document.getElementById('location-name');
     const dailyRateInput = document.getElementById('daily-rate');
@@ -12,11 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const logFeedback = document.getElementById('log-feedback');
     const welcomeMessage = document.getElementById('welcome-message');
     const currentMonthSummaryDiv = document.getElementById('current-month-summary');
+    
+    // Editor de Banco de Dados
+    const openDatabaseEditorBtn = document.getElementById('open-database-editor');
+    const databaseEditorModal = document.getElementById('database-editor-modal');
+    const closeDatabaseEditorBtn = document.getElementById('close-database-editor');
+    const tableSelector = document.getElementById('table-selector');
+    const addRecordBtn = document.getElementById('add-record-btn');
+    const refreshDataBtn = document.getElementById('refresh-data-btn');
+    const dataGrid = document.getElementById('data-grid');
+    const recordEditorModal = document.getElementById('record-editor-modal');
+    const closeRecordEditorBtn = document.getElementById('close-record-editor');
+    const recordEditorTitle = document.getElementById('record-editor-title');
+    const recordForm = document.getElementById('record-form');
+    const cancelRecordEditBtn = document.getElementById('cancel-record-edit');
+    const saveRecordBtn = document.getElementById('save-record');
 
     // --- Constantes e Estado da Aplicação ---
     const API_URL = '/api/hospedagem';
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     let appData = getInitialData();
+    
+    // Estado do Editor de Banco
+    let currentTable = 'usuario';
+    let currentTableData = [];
+    let editingRecord = null;
+    let editingIndex = -1;
 
     // --- Funções ---
 
@@ -370,6 +398,12 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `<div class="${dayClass}" data-day="${day}">${day}</div>`;
         }
         html += '</div>';
+        
+        // Adiciona dica para dispositivos móveis
+        if (isMobileDevice()) {
+            html += '<div class="mobile-hint">💡 Toque duas vezes em um dia para registrar/remover hospedagem</div>';
+        }
+        
         return html;
     }
 
@@ -410,29 +444,65 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Manipula o clique para fechar um mês.
      */
-    async function handleCloseMonth(monthKey) {
+    function handleCloseMonth(monthKey) {
         const monthData = appData.hospedagens[monthKey];
         const dailyRate = parseFloat(appData.usuario.valorDiaria) || 0;
         const calculatedCost = monthData.dias.length * dailyRate;
 
-        const promptMessage = `O valor calculado para ${monthKey} é ${formatCurrency(calculatedCost)}.\n\nInforme o valor efetivamente pago:`
-        const paidAmountStr = prompt(promptMessage, calculatedCost.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}).replace('.', ','));
+        // Preencher dados no modal
+        closeMonthNameSpan.textContent = monthKey;
+        calculatedValueSpan.textContent = formatCurrency(calculatedCost);
+        paidAmountInput.value = calculatedCost.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}).replace('.', ',');
+        
+        // Armazenar dados temporariamente para uso na confirmação
+        closeMonthModal.dataset.monthKey = monthKey;
+        closeMonthModal.dataset.calculatedCost = calculatedCost;
+        
+        // Mostrar modal
+        closeMonthModal.classList.remove('hidden');
+        
+        // Dar foco e selecionar todo o texto para facilitar a edição
+        setTimeout(() => {
+            paidAmountInput.focus();
+            paidAmountInput.select();
+        }, 100);
+    }
 
-        if (paidAmountStr === null) return; // Usuário cancelou
+    async function confirmCloseMonth() {
+        const monthKey = closeMonthModal.dataset.monthKey;
+        const calculatedCost = parseFloat(closeMonthModal.dataset.calculatedCost);
+        const paidAmountStr = paidAmountInput.value.trim();
 
-        const paidAmount = parseFloat(paidAmountStr.replace(',', '.').trim());
+        if (!paidAmountStr) {
+            showFeedback('Por favor, informe o valor pago.', 'error');
+            return;
+        }
+
+        const paidAmount = parseFloat(paidAmountStr.replace(',', '.'));
 
         if (isNaN(paidAmount) || paidAmount < 0) {
             showFeedback('Valor de pagamento inválido.', 'error');
             return;
         }
 
+        const monthData = appData.hospedagens[monthKey];
         monthData.fechado = true;
         monthData.valorCalculado = calculatedCost;
         monthData.valorPago = paidAmount;
 
         const success = await saveData();
-        if (success) renderSummaries();
+        if (success) {
+            renderSummaries();
+            closeCloseMonthModal();
+            showFeedback('Mês fechado com sucesso!', 'success');
+        }
+    }
+
+    function closeCloseMonthModal() {
+        closeMonthModal.classList.add('hidden');
+        paidAmountInput.value = '';
+        delete closeMonthModal.dataset.monthKey;
+        delete closeMonthModal.dataset.calculatedCost;
     }
 
     /**
@@ -543,12 +613,32 @@ document.addEventListener('DOMContentLoaded', () => {
     logStayButton.addEventListener('click', handleLogStay);
     saveSettingsButton.addEventListener('click', handleSaveSettings);
 
-    // Controle da Modal
+    // Controle da Modal de Configurações
     openSettingsModalButton.addEventListener('click', () => toggleModal(true));
     closeSettingsModalButton.addEventListener('click', () => toggleModal(false));
     settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) toggleModal(false); // Fecha se clicar no fundo
     });
+
+    // Controle da Modal de Fechamento de Mês
+    closeMonthModalBtn.addEventListener('click', closeCloseMonthModal);
+    cancelCloseMonthBtn.addEventListener('click', closeCloseMonthModal);
+    confirmCloseMonthBtn.addEventListener('click', confirmCloseMonth);
+    closeMonthModal.addEventListener('click', (e) => {
+        if (e.target === closeMonthModal) closeCloseMonthModal(); // Fecha se clicar no fundo
+    });
+
+    // Permitir confirmar com Enter no campo de valor pago
+    paidAmountInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            confirmCloseMonth();
+        }
+    });
+
+    // Variáveis para controle de toque em mobile
+    let lastTouchTime = 0;
+    let lastTouchedElement = null;
+    const DOUBLE_TAP_DELAY = 300; // 300ms para detectar duplo toque
 
     // Delegação de eventos para acordeão e botão de fechar mês
     document.addEventListener('click', (event) => {
@@ -568,12 +658,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const calendarDay = event.target.closest('.calendar-day:not(.empty)');
         if (calendarDay) {
-            // Verifica se é um duplo clique
-            if (event.detail === 2) {
+            // Verifica se é um duplo clique (apenas para desktop)
+            if (event.detail === 2 && !isMobileDevice()) {
+                event.preventDefault();
                 handleDayDoubleClick(calendarDay);
             }
         }
     });
+
+    // Event listener para touch events em dispositivos móveis
+    document.addEventListener('touchstart', (event) => {
+        const calendarDay = event.target.closest('.calendar-day:not(.empty)');
+        if (calendarDay && isMobileDevice()) {
+            // Adiciona feedback visual
+            calendarDay.classList.add('touched');
+        }
+    });
+
+    document.addEventListener('touchend', (event) => {
+        const calendarDay = event.target.closest('.calendar-day:not(.empty)');
+        if (calendarDay && isMobileDevice()) {
+            event.preventDefault(); // Previne zoom
+            
+            // Remove feedback visual
+            setTimeout(() => {
+                calendarDay.classList.remove('touched');
+            }, 150);
+            
+            const currentTime = new Date().getTime();
+            const timeDiff = currentTime - lastTouchTime;
+            
+            if (timeDiff < DOUBLE_TAP_DELAY && lastTouchedElement === calendarDay) {
+                // Duplo toque detectado
+                handleDayDoubleClick(calendarDay);
+                lastTouchTime = 0; // Reset para evitar triplo toque
+                lastTouchedElement = null;
+            } else {
+                // Primeiro toque
+                lastTouchTime = currentTime;
+                lastTouchedElement = calendarDay;
+            }
+        }
+    });
+
+    // Remove feedback visual se o toque for cancelado
+    document.addEventListener('touchcancel', (event) => {
+        const calendarDay = event.target.closest('.calendar-day:not(.empty)');
+        if (calendarDay && isMobileDevice()) {
+            calendarDay.classList.remove('touched');
+        }
+    });
+
+    /**
+     * Detecta se o dispositivo é móvel
+     */
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               ('ontouchstart' in window) || 
+               (navigator.maxTouchPoints > 0);
+    }
 
     // Event listener para clique nos meses históricos
     document.addEventListener('click', function(event) {
@@ -689,8 +832,305 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Funções do Editor de Banco de Dados ---
+
+    /**
+     * Abre o modal do editor de banco de dados.
+     */
+    function openDatabaseEditor() {
+        databaseEditorModal.classList.remove('hidden');
+        loadTableData();
+    }
+
+    /**
+     * Fecha o modal do editor de banco de dados.
+     */
+    function closeDatabaseEditor() {
+        databaseEditorModal.classList.add('hidden');
+        currentTableData = [];
+    }
+
+    /**
+     * Carrega os dados da tabela selecionada.
+     */
+    async function loadTableData() {
+        try {
+            const response = await fetch(`/api/database/tables/${currentTable}`);
+            if (response.ok) {
+                currentTableData = await response.json();
+                renderDataGrid();
+            } else {
+                console.error('Erro ao carregar dados da tabela');
+                showFeedback('Erro ao carregar dados da tabela', 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showFeedback('Erro de conexão', 'error');
+        }
+    }
+
+    /**
+     * Renderiza a grade de dados.
+     */
+    function renderDataGrid() {
+        if (currentTableData.length === 0) {
+            dataGrid.innerHTML = '<div class="p-4 text-center text-gray-500">Nenhum registro encontrado</div>';
+            return;
+        }
+
+        const columns = Object.keys(currentTableData[0]);
+        
+        let html = `
+            <table class="min-w-full bg-white">
+                <thead class="bg-gray-50">
+                    <tr>
+                        ${columns.map(col => `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${col}</th>`).join('')}
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+        `;
+
+        currentTableData.forEach((record, index) => {
+            html += `
+                <tr class="hover:bg-gray-50">
+                    ${columns.map(col => {
+                        let value = record[col];
+                        if (col.includes('data') && value) {
+                            value = new Date(value).toLocaleDateString('pt-BR');
+                        }
+                        return `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${value || ''}</td>`;
+                    }).join('')}
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editRecord(${index})" class="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
+                        <button onclick="deleteRecord(${index})" class="text-red-600 hover:text-red-900">Excluir</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        `;
+
+        dataGrid.innerHTML = html;
+    }
+
+    /**
+     * Abre o modal de edição de registro.
+     */
+    function openRecordEditor(title, record = null, index = -1) {
+        recordEditorTitle.textContent = title;
+        editingRecord = record;
+        editingIndex = index;
+        
+        generateRecordForm(record);
+        recordEditorModal.classList.remove('hidden');
+    }
+
+    /**
+     * Fecha o modal de edição de registro.
+     */
+    function closeRecordEditor() {
+        recordEditorModal.classList.add('hidden');
+        editingRecord = null;
+        editingIndex = -1;
+        recordForm.innerHTML = '';
+    }
+
+    /**
+     * Gera o formulário de edição baseado na tabela atual.
+     */
+    function generateRecordForm(record) {
+        let html = '';
+        
+        if (currentTable === 'usuario') {
+            html = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                    <input type="text" name="nome" value="${record?.nome || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Local Padrão</label>
+                    <input type="text" name="localPadrao" value="${record?.localPadrao || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor da Diária</label>
+                    <input type="number" step="0.01" name="valorDiaria" value="${record?.valorDiaria || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            `;
+        } else if (currentTable === 'hospedagem') {
+            html = `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mês/Ano</label>
+                    <input type="text" name="mesAno" value="${record?.mesAno || ''}" placeholder="Ex: 2025-08" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Dias (JSON)</label>
+                    <input type="text" name="dias" value="${record?.dias || ''}" placeholder="Ex: [1,2,3]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fechado</label>
+                    <select name="fechado" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="0" ${record?.fechado == 0 ? 'selected' : ''}>Não</option>
+                        <option value="1" ${record?.fechado == 1 ? 'selected' : ''}>Sim</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor Calculado</label>
+                    <input type="number" step="0.01" name="valorCalculado" value="${record?.valorCalculado || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor Pago</label>
+                    <input type="number" step="0.01" name="valorPago" value="${record?.valorPago || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            `;
+        }
+        
+        recordForm.innerHTML = html;
+    }
+
+    /**
+     * Salva o registro editado ou novo.
+     */
+    async function saveRecord() {
+        const formData = new FormData(recordForm);
+        const recordData = {};
+        
+        for (let [key, value] of formData.entries()) {
+            recordData[key] = value;
+        }
+        
+        // Conversão de tipos para tabela hospedagem
+        if (currentTable === 'hospedagem') {
+            if (recordData.fechado) recordData.fechado = parseInt(recordData.fechado);
+            if (recordData.valorCalculado) recordData.valorCalculado = parseFloat(recordData.valorCalculado);
+            if (recordData.valorPago) recordData.valorPago = parseFloat(recordData.valorPago);
+        }
+        
+        // Validação básica
+        if (currentTable === 'usuario' && !recordData.nome) {
+            showFeedback('Nome é obrigatório', 'error');
+            return;
+        }
+        
+        if (currentTable === 'hospedagem' && !recordData.mesAno) {
+            showFeedback('Mês/Ano é obrigatório', 'error');
+            return;
+        }
+        
+        try {
+            let response;
+            
+            if (editingIndex >= 0) {
+                // Atualizar registro existente
+                const recordId = currentTableData[editingIndex].id;
+                response = await fetch(`/api/database/tables/${currentTable}/${recordId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(recordData)
+                });
+            } else {
+                // Criar novo registro
+                response = await fetch(`/api/database/tables/${currentTable}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(recordData)
+                });
+            }
+            
+            if (response.ok) {
+                showFeedback('Registro salvo com sucesso!', 'success');
+                closeRecordEditor();
+                loadTableData();
+            } else {
+                showFeedback('Erro ao salvar registro', 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showFeedback('Erro de conexão', 'error');
+        }
+    }
+
+    /**
+     * Edita um registro.
+     */
+    window.editRecord = function(index) {
+        const record = currentTableData[index];
+        openRecordEditor('Editar Registro', record, index);
+    };
+
+    /**
+     * Exclui um registro.
+     */
+    window.deleteRecord = async function(index) {
+        if (!confirm('Tem certeza que deseja excluir este registro?')) {
+            return;
+        }
+        
+        try {
+            const recordId = currentTableData[index].id;
+            const response = await fetch(`/api/database/tables/${currentTable}/${recordId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                showFeedback('Registro excluído com sucesso!', 'success');
+                loadTableData();
+            } else {
+                showFeedback('Erro ao excluir registro', 'error');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showFeedback('Erro de conexão', 'error');
+        }
+    };
+
     // Tornar a função global para uso no onclick
     window.closeHistoricalModal = closeHistoricalModal;
+
+    // --- Event Listeners do Editor de Banco ---
+    
+    // Abrir editor de banco
+    openDatabaseEditorBtn.addEventListener('click', openDatabaseEditor);
+    
+    // Fechar editor de banco
+    closeDatabaseEditorBtn.addEventListener('click', closeDatabaseEditor);
+    
+    // Mudança de tabela
+    tableSelector.addEventListener('change', (e) => {
+        currentTable = e.target.value;
+        loadTableData();
+    });
+    
+    // Adicionar novo registro
+    addRecordBtn.addEventListener('click', () => {
+        openRecordEditor('Adicionar Registro');
+    });
+    
+    // Atualizar dados
+    refreshDataBtn.addEventListener('click', loadTableData);
+    
+    // Fechar editor de registro
+    closeRecordEditorBtn.addEventListener('click', closeRecordEditor);
+    cancelRecordEditBtn.addEventListener('click', closeRecordEditor);
+    
+    // Salvar registro
+    saveRecordBtn.addEventListener('click', saveRecord);
+    
+    // Fechar modais ao clicar fora
+    databaseEditorModal.addEventListener('click', (e) => {
+        if (e.target === databaseEditorModal) {
+            closeDatabaseEditor();
+        }
+    });
+    
+    recordEditorModal.addEventListener('click', (e) => {
+        if (e.target === recordEditorModal) {
+            closeRecordEditor();
+        }
+    });
 
     // --- Inicialização ---
     loadData();

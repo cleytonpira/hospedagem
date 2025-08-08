@@ -48,6 +48,14 @@ body {
 .calendar-day {
     display: flex;
     align-items: center;
+    /* Melhorias para dispositivos móveis */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     justify-content: center;
     height: 2.25rem;
     width: 2.25rem;
@@ -70,6 +78,33 @@ body {
 
 .calendar-day.has-stay:hover {
     background-color: #38a169;
+}
+
+/* Feedback visual para toque em dispositivos móveis */
+.calendar-day.touched {
+    background-color: #cbd5e0;
+    transform: scale(0.95);
+}
+
+.calendar-day.has-stay.touched {
+    background-color: #38a169;
+    transform: scale(0.95);
+}
+
+/* Dica para dispositivos móveis */
+.mobile-hint {
+    display: none;
+    font-size: 0.75rem;
+    color: #718096;
+    text-align: center;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .mobile-hint {
+        display: block;
+    }
 }
 
 /* Calendário Expandido */
@@ -148,9 +183,25 @@ body {
     font-size: 0.75rem !important; /* Reduzir labels das estatísticas */
 }
 
-/* Estilos para a modal de configurações */
+/* Estilos para as modais */
 .hidden {
     display: none;
+}
+
+/* Modal de fechamento de mês */
+#close-month-modal input[type="text"] {
+    text-align: right;
+}
+
+#close-month-modal #calculated-value {
+    font-size: 1.1rem;
+}
+
+#close-month-modal .space-y-4 > div:first-child {
+    background-color: #f8fafc;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid #10b981;
 }
 
 .month-closed .accordion-toggle {
@@ -264,5 +315,55 @@ body {
         right: 1rem !important;
         padding: 0.5rem 0.75rem !important;
         font-size: 0.875rem !important;
+    }
+}
+
+/* Estilos do Editor de Banco de Dados */
+#database-editor-modal table {
+    border-collapse: collapse;
+}
+
+#database-editor-modal th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+#database-editor-modal td {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#database-editor-modal tr:hover {
+    background-color: #f9fafb;
+}
+
+#database-editor-modal .table-actions button {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+}
+
+#database-editor-modal .table-actions button:hover {
+    text-decoration: underline;
+}
+
+/* Responsividade para o editor de banco */
+@media (max-width: 768px) {
+    #database-editor-modal .max-w-6xl {
+        max-width: 95vw;
+    }
+    
+    #database-editor-modal table {
+        font-size: 0.75rem;
+    }
+    
+    #database-editor-modal th,
+    #database-editor-modal td {
+        padding: 0.5rem 0.25rem;
     }
 }

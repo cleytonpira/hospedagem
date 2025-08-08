@@ -133,6 +133,80 @@ app.post('/api/hospedagem/registrar-diaria-especifica', async (req, res) => {
     }
 });
 
+// === ENDPOINTS PARA EDITOR DE BANCO DE DADOS ===
+
+// Obter todas as tabelas e dados
+app.get('/api/database/tables', async (req, res) => {
+    try {
+        const tables = await db.getAllTables();
+        res.json(tables);
+    } catch (error) {
+        console.error('Erro ao obter tabelas:', error);
+        res.status(500).json({ error: 'Erro ao obter dados das tabelas' });
+    }
+});
+
+// Obter dados de uma tabela específica
+app.get('/api/database/tables/:tableName', async (req, res) => {
+    try {
+        const { tableName } = req.params;
+        const data = await db.getAllTables();
+        
+        if (tableName === 'usuario') {
+            res.json(data.usuario || []);
+        } else if (tableName === 'hospedagem') {
+            res.json(data.hospedagem || []);
+        } else {
+            res.status(404).json({ error: 'Tabela não encontrada' });
+        }
+    } catch (error) {
+        console.error('Erro ao obter dados da tabela:', error);
+        res.status(500).json({ error: 'Erro ao obter dados da tabela' });
+    }
+});
+
+// Inserir novo registro
+app.post('/api/database/tables/:tableName', async (req, res) => {
+    try {
+        const { tableName } = req.params;
+        const result = await db.insertRecord(tableName, req.body);
+        res.status(201).json({ message: 'Registro inserido com sucesso', id: result.id });
+    } catch (error) {
+        console.error('Erro ao inserir registro:', error);
+        res.status(500).json({ error: 'Erro ao inserir registro' });
+    }
+});
+
+// Atualizar registro existente
+app.put('/api/database/tables/:tableName/:id', async (req, res) => {
+    try {
+        const { tableName, id } = req.params;
+        const result = await db.updateRecord(tableName, parseInt(id), req.body);
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Registro não encontrado' });
+        }
+        res.json({ message: 'Registro atualizado com sucesso' });
+    } catch (error) {
+        console.error('Erro ao atualizar registro:', error);
+        res.status(500).json({ error: 'Erro ao atualizar registro' });
+    }
+});
+
+// Deletar registro
+app.delete('/api/database/tables/:tableName/:id', async (req, res) => {
+    try {
+        const { tableName, id } = req.params;
+        const result = await db.deleteRecord(tableName, parseInt(id));
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'Registro não encontrado' });
+        }
+        res.json({ message: 'Registro deletado com sucesso' });
+    } catch (error) {
+        console.error('Erro ao deletar registro:', error);
+        res.status(500).json({ error: 'Erro ao deletar registro' });
+    }
+});
+
 // Inicializar banco de dados e iniciar servidor
 async function startServer() {
     try {
