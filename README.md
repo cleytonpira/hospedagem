@@ -18,6 +18,14 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 
 ## Deploy no Vercel
 
+### Arquitetura Serverless
+
+Esta aplicação foi configurada para usar **Serverless Functions** do Vercel:
+
+- **Frontend**: Arquivos estáticos servidos da pasta `public/`
+- **Backend**: API serverless em `api/hospedagem.js`
+- **Dados**: Persistência via arquivo JSON (limitações em produção)
+
 ### Pré-requisitos
 
 1. Conta no [Vercel](https://vercel.com)
@@ -43,19 +51,25 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 
 3. **Configuração Automática**
    - O Vercel detectará automaticamente as configurações do `vercel.json`
+   - A API será automaticamente configurada como serverless function
    - O deploy será feito automaticamente
 
 ### Estrutura do Projeto
 
 ```
-├── public/           # Arquivos estáticos (frontend)
+hospedagem-backend/
+├── api/              # Serverless functions do Vercel
+│   └── hospedagem.js # API principal para dados de hospedagem
+├── public/           # Arquivos estáticos (HTML, CSS, JS)
 │   ├── index.html
-│   ├── app.js
-│   └── style.css
-├── server.js         # Servidor Express
-├── dados.json        # Arquivo de dados
-├── package.json      # Dependências e scripts
+│   ├── style.css
+│   └── app.js
+├── server.js         # Servidor Express (para desenvolvimento local)
+├── dados.json        # Arquivo de dados (criado automaticamente)
+├── package.json      # Dependências do projeto
 ├── vercel.json       # Configuração do Vercel
+├── .gitignore        # Arquivos ignorados pelo Git
+├── .env.example      # Exemplo de variáveis de ambiente
 └── README.md         # Este arquivo
 ```
 
