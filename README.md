@@ -14,7 +14,7 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 
 - **Backend**: Node.js + Express
 - **Frontend**: HTML, CSS (Tailwind), JavaScript
-- **Banco de Dados**: SQLite3
+- **Banco de Dados**: Supabase (PostgreSQL)
 - **Deploy**: Vercel
 
 ## Deploy no Vercel
@@ -49,15 +49,20 @@ Aplicação web para controle de hospedagens com backend Node.js e frontend vani
 ### Estrutura do Projeto
 
 ```
-├── public/           # Arquivos estáticos (frontend)
+├── public/                # Arquivos estáticos (frontend)
 │   ├── index.html
 │   ├── app.js
 │   └── style.css
-├── server.js         # Servidor Express
-├── dados.json        # Arquivo de dados
-├── package.json      # Dependências e scripts
-├── vercel.json       # Configuração do Vercel
-└── README.md         # Este arquivo
+├── docs/                  # Documentação
+│   └── PDR.md
+├── server.js              # Servidor Express
+├── database.js            # Módulo de conexão com Supabase
+├── supabase-setup.sql     # Script de configuração do banco
+├── SUPABASE_MIGRATION.md  # Documentação da migração
+├── .env.example           # Exemplo de variáveis de ambiente
+├── package.json           # Dependências e scripts
+├── vercel.json            # Configuração do Vercel
+└── README.md              # Este arquivo
 ```
 
 ### Desenvolvimento Local
@@ -73,47 +78,66 @@ npm run dev
 npm start
 ```
 
-**Nota**: Na primeira execução, se você tiver um arquivo `dados.json`, ele será automaticamente migrado para SQLite.
+**Nota**: Configure as variáveis de ambiente do Supabase antes da primeira execução.
 
 A aplicação estará disponível em `http://localhost:3000`
 
 ## 🗄️ Banco de Dados
 
-A aplicação utiliza **SQLite3** com configuração adaptativa:
+A aplicação utiliza **Supabase** (PostgreSQL) para persistência de dados:
 
-- ✅ **Desenvolvimento Local**: Banco SQLite persistente (`hospedagem.db`)
-- ✅ **Produção (Vercel)**: Banco SQLite em memória (temporário)
-- ✅ **Migração Automática**: Converte dados do `dados.json` automaticamente
-- ✅ **Backup Automático**: Arquivo JSON original é preservado como `.backup`
+- ✅ **Desenvolvimento Local**: Conecta ao Supabase via variáveis de ambiente
+- ✅ **Produção (Vercel)**: Conecta ao Supabase via variáveis de ambiente
+- ✅ **Persistência Total**: Dados são mantidos permanentemente
+- ✅ **Interface Web**: Dashboard do Supabase para gerenciamento
 
-### Configuração por Ambiente
+### Configuração do Supabase
 
-**Desenvolvimento Local:**
-- Usa arquivo `hospedagem.db` para persistência
-- Dados são mantidos entre reinicializações
-- Migração automática do `dados.json`
+1. **Criar conta no Supabase**:
+   - Acesse [supabase.com](https://supabase.com)
+   - Crie uma conta gratuita
+   - Crie um novo projeto
 
-**Produção (Vercel):**
-- Usa SQLite em memória (`:memory:`)
-- Dados são temporários (perdidos a cada reinicialização)
-- Adequado para demonstrações e testes
+2. **Configurar variáveis de ambiente**:
+   ```bash
+   # Copie o arquivo de exemplo
+   cp .env.example .env
+   
+   # Configure as variáveis no arquivo .env
+   SUPABASE_URL=sua_url_do_supabase
+   SUPABASE_ANON_KEY=sua_chave_anonima
+   ```
 
-### Migração Automática
+3. **Executar script de configuração**:
+   - Execute o script `supabase-setup.sql` no SQL Editor do Supabase
+   - Isso criará as tabelas necessárias: `usuarios` e `hospedagens`
 
-Quando você executar a aplicação pela primeira vez:
-1. O sistema detectará o arquivo `dados.json` existente
-2. Migrará automaticamente todos os dados para SQLite
-3. Renomeará o arquivo original para `dados.json.backup`
-4. Continuará funcionando normalmente com o banco SQLite
+### Estrutura do Banco
 
-### Para Produção com Persistência
+**Tabela `usuarios`**:
+- `id`: UUID (chave primária)
+- `nome`: TEXT
+- `created_at`: TIMESTAMP
+- `updated_at`: TIMESTAMP
 
-Para dados persistentes em produção, integre com:
-1. **Vercel Postgres**: Banco PostgreSQL da Vercel
-2. **PlanetScale**: MySQL serverless
-3. **Supabase**: PostgreSQL com interface amigável
-4. **Railway**: PostgreSQL/MySQL simples
+**Tabela `hospedagens`**:
+- `id`: UUID (chave primária)
+- `usuario_id`: UUID (referência ao usuário)
+- `data`: DATE
+- `valor`: DECIMAL
+- `created_at`: TIMESTAMP
+- `updated_at`: TIMESTAMP
 
-Para implementar:
-1. Modifique `database.js` para usar o banco escolhido
-2. Adicione as variáveis de ambiente no Vercel
+### Deploy com Supabase
+
+Para deploy no Vercel:
+1. Configure as variáveis de ambiente no painel do Vercel
+2. Adicione `SUPABASE_URL` e `SUPABASE_ANON_KEY`
+3. O deploy será automático com persistência total
+
+### Migração de Dados
+
+Se você possui dados em formato JSON:
+1. Execute a aplicação localmente com Supabase configurado
+2. Use o editor de banco integrado para importar dados
+3. Ou execute scripts SQL personalizados no Supabase

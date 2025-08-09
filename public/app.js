@@ -183,22 +183,22 @@ document.addEventListener('DOMContentLoaded', () => {
         
         generalStatisticsDiv.innerHTML = `
             <h3 class="text-xl font-bold mb-4 text-gray-800">Estatísticas Gerais</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="text-center p-4 bg-blue-50 rounded-lg">
-                    <div class="text-2xl font-bold text-blue-600">${totalMeses}</div>
-                    <div class="text-sm text-gray-600">Meses Hospedados</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                <div class="text-center p-2 md:p-4 bg-blue-50 rounded-lg">
+                    <div class="text-lg md:text-2xl font-bold text-blue-600 leading-tight">${totalMeses}</div>
+                    <div class="text-xs md:text-sm text-gray-600 leading-tight">Meses Hospedados</div>
                 </div>
-                <div class="text-center p-4 bg-green-50 rounded-lg">
-                    <div class="text-2xl font-bold text-green-600">${totalDias}</div>
-                    <div class="text-sm text-gray-600">Total de Dias</div>
+                <div class="text-center p-2 md:p-4 bg-green-50 rounded-lg">
+                    <div class="text-lg md:text-2xl font-bold text-green-600 leading-tight">${totalDias}</div>
+                    <div class="text-xs md:text-sm text-gray-600 leading-tight">Total de Dias</div>
                 </div>
-                <div class="text-center p-4 bg-purple-50 rounded-lg">
-                    <div class="text-2xl font-bold text-purple-600">R$ ${totalValorPago.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                    <div class="text-sm text-gray-600">Valor Total Pago</div>
+                <div class="text-center p-2 md:p-4 bg-purple-50 rounded-lg">
+                    <div class="text-sm md:text-xl font-bold text-purple-600 leading-tight">R$ ${totalValorPago.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div class="text-xs md:text-sm text-gray-600 leading-tight">Valor Total Pago</div>
                 </div>
-                <div class="text-center p-4 bg-orange-50 rounded-lg">
-                    <div class="text-2xl font-bold text-orange-600">R$ ${mediaMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                    <div class="text-sm text-gray-600">Média Mensal</div>
+                <div class="text-center p-2 md:p-4 bg-orange-50 rounded-lg">
+                    <div class="text-sm md:text-xl font-bold text-orange-600 leading-tight">R$ ${mediaMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div class="text-xs md:text-sm text-gray-600 leading-tight">Média Mensal</div>
                 </div>
             </div>
         `;
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3 class="text-lg font-semibold">${title} <span class="text-base font-normal text-gray-500">(${defaultTitle})</span></h3>
                 <svg class="w-6 h-6 arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
             </div>
-            <div class="mt-2 text-gray-700">
+            <div class="mt-2 text-gray-700 text-sm md:text-base">
                 <p><strong>Diárias registradas:</strong> ${totalDays}</p>
                 <p><strong>Custo estimado:</strong> ${formatCurrency(totalCost)}</p>
             </div>
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const paidAmount = monthData.valorPago || 0;
             statusHtml = `
                 <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded mb-4">
-                    <strong>Mês Fechado</strong> - Valor Pago: ${formatCurrency(paidAmount)}
+                    <span class="text-sm md:text-base"><strong>Mês Fechado</strong> - Valor Pago: ${formatCurrency(paidAmount)}</span>
                 </div>
             `;
         }
@@ -350,18 +350,18 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="bg-white rounded-lg shadow-md p-6 mb-6 calendar-expanded">
                 <h2 class="text-2xl font-bold mb-4">${title}</h2>
                 ${statusHtml}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="grid grid-cols-3 gap-2 md:gap-4 mb-4">
                     <div class="text-center">
-                        <div class="text-2xl font-bold text-blue-600">${totalDays}</div>
-                        <div class="text-sm text-gray-600">Diárias</div>
+                        <div class="text-lg md:text-xl font-bold text-blue-600">${totalDays}</div>
+                        <div class="text-xs md:text-sm text-gray-600">Diárias</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-2xl font-bold text-green-600">${formatCurrency(totalCost)}</div>
-                        <div class="text-sm text-gray-600">Total Estimado</div>
+                        <div class="text-lg md:text-xl font-bold text-green-600">${formatCurrency(totalCost)}</div>
+                        <div class="text-xs md:text-sm text-gray-600">Total Estimado</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-2xl font-bold text-purple-600">${formatCurrency(dailyRate)}</div>
-                        <div class="text-sm text-gray-600">Valor da Diária</div>
+                        <div class="text-lg md:text-xl font-bold text-purple-600">${formatCurrency(dailyRate)}</div>
+                        <div class="text-xs md:text-sm text-gray-600">Valor da Diária</div>
                     </div>
                 </div>
                 ${createCalendar(monthDate, monthData.dias)}
@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return `
             <div class="mt-4 p-3 rounded-lg bg-green-50 border border-green-200">
-                <p class="font-bold text-green-800 mb-2">Mês Fechado</p>
+                <p class="font-bold text-green-800 mb-2 text-sm md:text-base">Mês Fechado</p>
                 ${paidText}
             </div>
         `;
@@ -419,6 +419,15 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < firstDay; i++) html += '<div class="calendar-day empty"></div>';
         for (let day = 1; day <= daysInMonth; day++) {
             let dayClass = 'calendar-day';
+            
+            // Calcular o dia da semana (0 = domingo, 6 = sábado)
+            const dayOfWeek = (firstDay + day - 1) % 7;
+            
+            // Adicionar classe para final de semana
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                dayClass += ' weekend';
+            }
+            
             if (hostedDays.includes(day)) {
                 dayClass += ' has-stay';
             }
@@ -429,10 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         html += '</div>';
         
-        // Adiciona dica para dispositivos móveis
-        if (isMobileDevice()) {
-            html += '<div class="mobile-hint">💡 Toque duas vezes em um dia para registrar/remover hospedagem</div>';
-        }
+
         
         return html;
     }
@@ -648,11 +654,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Configurar cores baseadas no tipo
         if (type === 'success') {
-            element.className = 'fixed bottom-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
+            element.className = 'fixed top-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
         } else if (type === 'error') {
-            element.className = 'fixed bottom-20 right-6 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
+            element.className = 'fixed top-20 right-6 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
         } else {
-            element.className = 'fixed bottom-20 right-6 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
+            element.className = 'fixed top-20 right-6 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
         }
 
         if (message) {
@@ -846,7 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const paidAmount = monthData.valorPago || 0;
             statusHtml = `
                 <div class="bg-green-100 border border-green-400 text-green-700 px-3 py-2 rounded mb-4">
-                    <strong>Mês Fechado</strong> - Valor Pago: ${formatCurrency(paidAmount)}
+                    <span class="text-sm md:text-base"><strong>Mês Fechado</strong> - Valor Pago: ${formatCurrency(paidAmount)}</span>
                 </div>
             `;
         }
@@ -854,18 +860,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const html = `
             <div class="bg-white">
                 ${statusHtml}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-3 gap-2 md:gap-4 mb-6">
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-blue-600">${totalDays}</div>
-                        <div class="text-sm text-gray-600">Diárias</div>
+                        <div class="text-xl md:text-2xl font-bold text-blue-600">${totalDays}</div>
+                        <div class="text-xs md:text-sm text-gray-600">Diárias</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-green-600">${formatCurrency(totalCost)}</div>
-                        <div class="text-sm text-gray-600">Total Estimado</div>
+                        <div class="text-xl md:text-2xl font-bold text-green-600">${formatCurrency(totalCost)}</div>
+                        <div class="text-xs md:text-sm text-gray-600">Total Estimado</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-purple-600">${formatCurrency(dailyRate)}</div>
-                        <div class="text-sm text-gray-600">Valor da Diária</div>
+                        <div class="text-xl md:text-2xl font-bold text-purple-600">${formatCurrency(dailyRate)}</div>
+                        <div class="text-xs md:text-sm text-gray-600">Valor da Diária</div>
                     </div>
                 </div>
                 ${createCalendar(monthDate, monthData.dias)}

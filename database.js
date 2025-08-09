@@ -187,8 +187,8 @@ class Database {
                     mesano: mesAno,
                     dias: JSON.stringify(hospedagem.dias),
                     fechado: hospedagem.fechado,
-                    valorcalculado: hospedagem.valorCalculado,
-                    valorpago: hospedagem.valorPago
+                    valorcalculado: (hospedagem.valorCalculado === '' || hospedagem.valorCalculado === null || hospedagem.valorCalculado === undefined) ? null : parseFloat(hospedagem.valorCalculado),
+                    valorpago: (hospedagem.valorPago === '' || hospedagem.valorPago === null || hospedagem.valorPago === undefined) ? null : parseFloat(hospedagem.valorPago)
                 };
 
                 let result;
@@ -305,10 +305,29 @@ class Database {
     getAllTables() {
         return new Promise(async (resolve, reject) => {
             try {
-                const data = await this.getAllData();
+                if (!this.supabase) {
+                    await this.connect();
+                }
+                
+                // Buscar dados do usuário
+                const usuario = await this.getUsuario();
+                
+                // Buscar dados das hospedagens diretamente (já vem como array com IDs)
+                const hospedagensArray = await this.getHospedagens();
+                
+                // Formatar hospedagens para o Editor de Banco
+                const hospedagensFormatadas = hospedagensArray.map(hospedagem => ({
+                    id: hospedagem.id,
+                    mesAno: hospedagem.mesAno,
+                    dias: JSON.stringify(hospedagem.dias || {}),
+                    fechado: hospedagem.fechado || false,
+                    valorCalculado: hospedagem.valorCalculado || 0,
+                    valorPago: hospedagem.valorPago || 0
+                }));
+                
                 resolve({
-                    usuario: [data.usuario],
-                    hospedagem: data.hospedagens
+                    usuario: [usuario],
+                    hospedagem: hospedagensFormatadas
                 });
             } catch (error) {
                 reject(error);
@@ -342,11 +361,15 @@ class Database {
                         delete mappedData.mesAno;
                     }
                     if (data.valorCalculado !== undefined) {
-                        mappedData.valorcalculado = data.valorCalculado;
+                        // Converter para número ou null se vazio
+                        const valor = data.valorCalculado;
+                        mappedData.valorcalculado = (valor === '' || valor === null || valor === undefined) ? null : parseFloat(valor);
                         delete mappedData.valorCalculado;
                     }
                     if (data.valorPago !== undefined) {
-                        mappedData.valorpago = data.valorPago;
+                        // Converter para número ou null se vazio
+                        const valor = data.valorPago;
+                        mappedData.valorpago = (valor === '' || valor === null || valor === undefined) ? null : parseFloat(valor);
                         delete mappedData.valorPago;
                     }
                 }
@@ -398,11 +421,15 @@ class Database {
                         delete mappedData.mesAno;
                     }
                     if (data.valorCalculado !== undefined) {
-                        mappedData.valorcalculado = data.valorCalculado;
+                        // Converter para número ou null se vazio
+                        const valor = data.valorCalculado;
+                        mappedData.valorcalculado = (valor === '' || valor === null || valor === undefined) ? null : parseFloat(valor);
                         delete mappedData.valorCalculado;
                     }
                     if (data.valorPago !== undefined) {
-                        mappedData.valorpago = data.valorPago;
+                        // Converter para número ou null se vazio
+                        const valor = data.valorPago;
+                        mappedData.valorpago = (valor === '' || valor === null || valor === undefined) ? null : parseFloat(valor);
                         delete mappedData.valorPago;
                     }
                 }
