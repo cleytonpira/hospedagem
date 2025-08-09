@@ -12,24 +12,7 @@ const db = new Database();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Função para migrar dados do JSON para SQLite (se necessário)
-async function migrateFromJson() {
-    const dataFile = path.join(__dirname, 'dados.json');
-    
-    if (fs.existsSync(dataFile)) {
-        try {
-            console.log('Migrando dados do arquivo JSON para SQLite...');
-            const jsonData = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
-            await db.saveAllData(jsonData);
-            
-            // Renomear arquivo JSON para backup
-            fs.renameSync(dataFile, dataFile + '.backup');
-            console.log('Migração concluída. Arquivo JSON renomeado para dados.json.backup');
-        } catch (error) {
-            console.error('Erro na migração:', error);
-        }
-    }
-}
+// Função de migração removida para preservar integridade dos dados
 
 // Endpoint para obter todos os dados
 app.get('/api/hospedagem', async (req, res) => {
@@ -42,10 +25,19 @@ app.get('/api/hospedagem', async (req, res) => {
     }
 });
 
-// Endpoint para salvar os dados
+// Endpoint para salvar dados - MODO SEGURO (merge ao invés de sobrescrever)
 app.post('/api/hospedagem', async (req, res) => {
     try {
-        await db.saveAllData(req.body);
+        // Obter dados existentes primeiro
+        const existingData = await db.getAllData();
+        
+        // Fazer merge dos dados ao invés de sobrescrever
+        const mergedData = {
+            usuario: req.body.usuario || existingData.usuario,
+            hospedagens: { ...existingData.hospedagens, ...req.body.hospedagens }
+        };
+        
+        await db.saveAllData(mergedData);
         res.json({ message: 'Dados salvos com sucesso!' });
     } catch (error) {
         console.error('Erro ao salvar dados:', error);
@@ -211,7 +203,7 @@ app.delete('/api/database/tables/:tableName/:id', async (req, res) => {
 async function startServer() {
     try {
         await db.connect();
-        await migrateFromJson();
+        // Migração removida para preservar dados existentes
         
         app.listen(PORT, () => {
             console.log(`Servidor rodando na porta ${PORT}`);
