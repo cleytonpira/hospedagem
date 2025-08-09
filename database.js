@@ -72,11 +72,15 @@ class Database {
     // Obter dados do usuário
     getUsuario() {
         return new Promise((resolve, reject) => {
+            console.log('Executando getUsuario...');
             this.db.get('SELECT * FROM usuario LIMIT 1', (err, row) => {
                 if (err) {
+                    console.error('Erro em getUsuario:', err);
                     reject(err);
                 } else {
-                    resolve(row || { nome: '', localPadrao: '', valorDiaria: 0 });
+                    const result = row || { nome: '', localPadrao: '', valorDiaria: 0 };
+                    console.log('getUsuario resultado:', result);
+                    resolve(result);
                 }
             });
         });
@@ -122,10 +126,13 @@ class Database {
     // Obter todas as hospedagens
     getHospedagens() {
         return new Promise((resolve, reject) => {
+            console.log('Executando getHospedagens...');
             this.db.all('SELECT * FROM hospedagem', (err, rows) => {
                 if (err) {
+                    console.error('Erro em getHospedagens:', err);
                     reject(err);
                 } else {
+                    console.log('Rows recuperadas de hospedagem:', rows);
                     const hospedagens = {};
                     rows.forEach(row => {
                         hospedagens[row.mesAno] = {
@@ -135,6 +142,7 @@ class Database {
                             valorPago: row.valorPago
                         };
                     });
+                    console.log('getHospedagens resultado:', hospedagens);
                     resolve(hospedagens);
                 }
             });
@@ -164,14 +172,27 @@ class Database {
     getAllData() {
         return new Promise(async (resolve, reject) => {
             try {
-                const usuario = await this.getUsuario();
-                const hospedagens = await this.getHospedagens();
+                console.log('Iniciando getAllData...');
                 
-                resolve({
+                if (!this.db) {
+                    throw new Error('Banco de dados não conectado');
+                }
+                
+                const usuario = await this.getUsuario();
+                console.log('Usuário recuperado:', usuario);
+                
+                const hospedagens = await this.getHospedagens();
+                console.log('Hospedagens recuperadas:', hospedagens);
+                
+                const result = {
                     usuario,
                     hospedagens
-                });
+                };
+                
+                console.log('getAllData concluído:', result);
+                resolve(result);
             } catch (error) {
+                console.error('Erro em getAllData:', error);
                 reject(error);
             }
         });

@@ -17,12 +17,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Endpoint para obter todos os dados
 app.get('/api/hospedagem', async (req, res) => {
     try {
-        // Garantir que o banco esteja conectado
+        // Garantir que o banco esteja conectado e inicializado
         if (!db.db) {
+            console.log('Banco não conectado, conectando...');
             await db.connect();
         }
         
+        // Aguardar um pouco para garantir que as tabelas foram criadas
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const data = await db.getAllData();
+        console.log('Dados recuperados:', data);
         res.json(data);
     } catch (error) {
         console.error('Erro ao obter dados:', error);
