@@ -106,11 +106,10 @@ app.post('/api/hospedagem/registrar-diaria-especifica', async (req, res) => {
         
         const { date } = req.body; // Espera uma data no formato "YYYY-MM-DD"
 
-    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        return res.status(400).json({ message: 'Formato de data inválido. Use YYYY-MM-DD.' });
-    }
+        if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return res.status(400).json({ message: 'Formato de data inválido. Use YYYY-MM-DD.' });
+        }
 
-    try {
         const appData = await db.getAllData();
 
         const [year, month, day] = date.split('-').map(Number);
