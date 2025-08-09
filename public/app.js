@@ -62,7 +62,16 @@ document.addEventListener('DOMContentLoaded', () => {
      * Carrega os dados principais do servidor.
      */
     async function loadData(retryCount = 0) {
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const mainContent = document.getElementById('main-content');
+        
         try {
+            // Mostrar indicador de carregamento apenas na primeira tentativa
+            if (retryCount === 0) {
+                if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+                if (mainContent) mainContent.classList.add('hidden');
+            }
+            
             const response = await fetch(API_URL, {
                 method: 'GET',
                 headers: {
@@ -71,9 +80,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Expires': '0'
                 }
             });
+            
             if (!response.ok) throw new Error('Não foi possível carregar os dados.');
+            
             appData = await response.json();
+            
+            // Esconder indicador de carregamento e mostrar conteúdo
+            if (loadingIndicator) loadingIndicator.classList.add('hidden');
+            if (mainContent) mainContent.classList.remove('hidden');
+            
             updateUI();
+            
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             
@@ -84,6 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadData(retryCount + 1);
                 }, (retryCount + 1) * 1000);
             } else {
+                // Esconder indicador de carregamento em caso de erro final
+                if (loadingIndicator) loadingIndicator.classList.add('hidden');
+                if (mainContent) mainContent.classList.remove('hidden');
                 showFeedback('Erro ao carregar dados do servidor. Tente recarregar a página.', 'error');
             }
         }

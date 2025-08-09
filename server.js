@@ -17,6 +17,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Endpoint para obter todos os dados
 app.get('/api/hospedagem', async (req, res) => {
     try {
+        // Garantir que o banco esteja conectado
+        if (!db.db) {
+            await db.connect();
+        }
+        
         const data = await db.getAllData();
         res.json(data);
     } catch (error) {
@@ -28,6 +33,11 @@ app.get('/api/hospedagem', async (req, res) => {
 // Endpoint para salvar dados - MODO SEGURO (merge ao invés de sobrescrever)
 app.post('/api/hospedagem', async (req, res) => {
     try {
+        // Garantir que o banco esteja conectado
+        if (!db.db) {
+            await db.connect();
+        }
+        
         // Obter dados existentes primeiro
         const existingData = await db.getAllData();
         
@@ -48,6 +58,11 @@ app.post('/api/hospedagem', async (req, res) => {
 // Endpoint para registrar uma diária (dia anterior)
 app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
     try {
+        // Garantir que o banco esteja conectado
+        if (!db.db) {
+            await db.connect();
+        }
+        
         const appData = await db.getAllData();
 
         const today = new Date();
@@ -83,7 +98,13 @@ app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
 
 // Endpoint para registrar ou remover uma diária em um dia específico (toggle)
 app.post('/api/hospedagem/registrar-diaria-especifica', async (req, res) => {
-    const { date } = req.body; // Espera uma data no formato "YYYY-MM-DD"
+    try {
+        // Garantir que o banco esteja conectado
+        if (!db.db) {
+            await db.connect();
+        }
+        
+        const { date } = req.body; // Espera uma data no formato "YYYY-MM-DD"
 
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         return res.status(400).json({ message: 'Formato de data inválido. Use YYYY-MM-DD.' });
