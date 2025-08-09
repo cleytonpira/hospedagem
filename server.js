@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -17,20 +18,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Endpoint para obter todos os dados
 app.get('/api/hospedagem', async (req, res) => {
     try {
-        // Garantir que o banco esteja conectado e inicializado
-        if (!db.db) {
-            console.log('Banco não conectado, conectando...');
+        // Garantir que o Supabase esteja conectado
+        if (!db.supabase) {
             await db.connect();
         }
         
-        // Aguardar um pouco para garantir que as tabelas foram criadas
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
         const data = await db.getAllData();
-        console.log('Dados recuperados:', data);
         res.json(data);
     } catch (error) {
-        console.error('Erro ao obter dados:', error);
+        // Erro ao obter dados
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
@@ -55,7 +51,7 @@ app.post('/api/hospedagem', async (req, res) => {
         await db.saveAllData(mergedData);
         res.json({ message: 'Dados salvos com sucesso!' });
     } catch (error) {
-        console.error('Erro ao salvar dados:', error);
+        // Erro ao salvar dados
         res.status(500).json({ error: 'Erro ao salvar dados' });
     }
 });
@@ -63,12 +59,16 @@ app.post('/api/hospedagem', async (req, res) => {
 // Endpoint para registrar uma diária (dia anterior)
 app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
     try {
+        // === INICIANDO REGISTRO DE DIÁRIA ===
+        
         // Garantir que o banco esteja conectado
         if (!db.db) {
             await db.connect();
         }
         
+        // Buscando dados atuais
         const appData = await db.getAllData();
+        // Dados recuperados
 
         const today = new Date();
         const yesterday = new Date(today);
@@ -79,24 +79,34 @@ app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
         const monthKey = `${year}-${month}`;
         const day = yesterday.getDate();
 
+        // Processando diária
+
         if (!appData.hospedagens[monthKey]) {
+            // Criando novo registro para mês
             appData.hospedagens[monthKey] = { dias: [], fechado: false };
         }
 
         if (appData.hospedagens[monthKey].fechado) {
+            // Mês está fechado, retornando erro
             return res.status(400).json({ message: 'Este mês já está fechado e não pode ser alterado.' });
         }
 
         if (appData.hospedagens[monthKey].dias.includes(day)) {
+            // Diária já registrada, retornando erro
             return res.status(400).json({ message: 'A diária para este dia já foi registrada.' });
         }
 
+        // Adicionando dia à lista
         appData.hospedagens[monthKey].dias.push(day);
-
+        
+        // Salvando dados
         await db.saveAllData(appData);
+        // saveAllData concluído com sucesso
+        
         res.status(201).json({ message: 'Diária registrada com sucesso!' });
+        // === REGISTRO DE DIÁRIA CONCLUÍDO ===
     } catch (error) {
-        console.error('Erro ao registrar diária:', error);
+        // Erro ao registrar diária
         res.status(500).json({ error: 'Erro ao salvar a nova diária.' });
     }
 });
@@ -145,7 +155,7 @@ app.post('/api/hospedagem/registrar-diaria-especifica', async (req, res) => {
         await db.saveAllData(appData);
         res.status(200).json({ message });
     } catch (error) {
-        console.error('Erro ao alterar diária:', error);
+        // Erro ao alterar diária
         res.status(500).json({ error: 'Erro ao salvar a alteração da diária.' });
     }
 });
@@ -158,7 +168,7 @@ app.get('/api/database/tables', async (req, res) => {
         const tables = await db.getAllTables();
         res.json(tables);
     } catch (error) {
-        console.error('Erro ao obter tabelas:', error);
+        // Erro ao obter tabelas
         res.status(500).json({ error: 'Erro ao obter dados das tabelas' });
     }
 });
@@ -177,7 +187,7 @@ app.get('/api/database/tables/:tableName', async (req, res) => {
             res.status(404).json({ error: 'Tabela não encontrada' });
         }
     } catch (error) {
-        console.error('Erro ao obter dados da tabela:', error);
+        // Erro ao obter dados da tabela
         res.status(500).json({ error: 'Erro ao obter dados da tabela' });
     }
 });
@@ -189,7 +199,7 @@ app.post('/api/database/tables/:tableName', async (req, res) => {
         const result = await db.insertRecord(tableName, req.body);
         res.status(201).json({ message: 'Registro inserido com sucesso', id: result.id });
     } catch (error) {
-        console.error('Erro ao inserir registro:', error);
+        // Erro ao inserir registro
         res.status(500).json({ error: 'Erro ao inserir registro' });
     }
 });
@@ -204,7 +214,7 @@ app.put('/api/database/tables/:tableName/:id', async (req, res) => {
         }
         res.json({ message: 'Registro atualizado com sucesso' });
     } catch (error) {
-        console.error('Erro ao atualizar registro:', error);
+        // Erro ao atualizar registro
         res.status(500).json({ error: 'Erro ao atualizar registro' });
     }
 });
@@ -219,7 +229,7 @@ app.delete('/api/database/tables/:tableName/:id', async (req, res) => {
         }
         res.json({ message: 'Registro deletado com sucesso' });
     } catch (error) {
-        console.error('Erro ao deletar registro:', error);
+        // Erro ao deletar registro
         res.status(500).json({ error: 'Erro ao deletar registro' });
     }
 });
@@ -231,10 +241,10 @@ async function startServer() {
         // Migração removida para preservar dados existentes
         
         app.listen(PORT, () => {
-            console.log(`Servidor rodando na porta ${PORT}`);
+            // Servidor rodando na porta 3000
         });
     } catch (error) {
-        console.error('Erro ao inicializar servidor:', error);
+        // Erro ao inicializar servidor
         process.exit(1);
     }
 }

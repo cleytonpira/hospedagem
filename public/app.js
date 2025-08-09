@@ -62,16 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Carrega os dados principais do servidor.
      */
     async function loadData(retryCount = 0) {
-        const loadingIndicator = document.getElementById('loading-indicator');
-        const mainContent = document.getElementById('main-content');
-        
         try {
-            // Mostrar indicador de carregamento apenas na primeira tentativa
-            if (retryCount === 0) {
-                if (loadingIndicator) loadingIndicator.classList.remove('hidden');
-                if (mainContent) mainContent.classList.add('hidden');
-            }
-            
             const response = await fetch(API_URL, {
                 method: 'GET',
                 headers: {
@@ -84,26 +75,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Não foi possível carregar os dados.');
             
             appData = await response.json();
-            
-            // Esconder indicador de carregamento e mostrar conteúdo
-            if (loadingIndicator) loadingIndicator.classList.add('hidden');
-            if (mainContent) mainContent.classList.remove('hidden');
-            
             updateUI();
             
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             
-            // Retry automático até 3 tentativas com delay crescente
+            // Retry automático até 3 tentativas (sem delay com Supabase)
             if (retryCount < 3) {
-                console.log(`Tentativa ${retryCount + 1} de recarregamento em ${(retryCount + 1) * 1000}ms...`);
-                setTimeout(() => {
-                    loadData(retryCount + 1);
-                }, (retryCount + 1) * 1000);
+                console.log(`Tentativa ${retryCount + 1} de recarregamento...`);
+                loadData(retryCount + 1);
             } else {
-                // Esconder indicador de carregamento em caso de erro final
-                if (loadingIndicator) loadingIndicator.classList.add('hidden');
-                if (mainContent) mainContent.classList.remove('hidden');
                 showFeedback('Erro ao carregar dados do servidor. Tente recarregar a página.', 'error');
             }
         }
@@ -122,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Não foi possível salvar os dados.');
             return true;
         } catch (error) {
-            console.error('Erro ao salvar dados:', error);
+            // Erro ao salvar dados
             showFeedback('Erro ao salvar dados no servidor.', 'error');
             return false;
         }
@@ -182,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const valorDiaria = appData.usuario?.valorDiaria || 0;
         
         let totalMeses = 0;
+        let totalMesesFechados = 0;
         let totalDias = 0;
         let totalValorPago = 0;
         
@@ -193,10 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (month.fechado && month.valorPago) {
                 totalValorPago += month.valorPago;
+                totalMesesFechados++;
             }
         });
         
-        const mediaMensal = totalMeses > 0 ? totalValorPago / totalMeses : 0;
+        const mediaMensal = totalMesesFechados > 0 ? totalValorPago / totalMesesFechados : 0;
         
         generalStatisticsDiv.innerHTML = `
             <h3 class="text-xl font-bold mb-4 text-gray-800">Estatísticas Gerais</h3>
@@ -471,11 +454,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Mostra ou esconde a animação de carregamento no botão
+     */
+    function toggleButtonLoading(buttonElement, isLoading) {
+        if (isLoading) {
+            buttonElement.disabled = true;
+            buttonElement.style.opacity = '0.7';
+            const originalContent = buttonElement.innerHTML;
+            buttonElement.dataset.originalContent = originalContent;
+            buttonElement.innerHTML = `
+                <div class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Salvando...
+                </div>
+            `;
+        } else {
+            buttonElement.disabled = false;
+            buttonElement.style.opacity = '1';
+            if (buttonElement.dataset.originalContent) {
+                buttonElement.innerHTML = buttonElement.dataset.originalContent;
+            }
+        }
+    }
+
+    /**
      * Manipula o clique para registrar uma nova diária.
      */
     async function handleLogStay() {
+        const logButton = document.getElementById('log-stay-button');
         showFeedback('', 'clear'); // Limpa feedback anterior
+        
         try {
+            toggleButtonLoading(logButton, true);
             const response = await fetch(`${API_URL}/registrar-diaria`, { method: 'POST' });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'Erro desconhecido.');
@@ -483,8 +493,10 @@ document.addEventListener('DOMContentLoaded', () => {
             showFeedback('Diária registrada com sucesso!', 'success');
             await loadData(); // Recarrega tudo para garantir consistência
         } catch (error) {
-            console.error('Erro ao registrar diária:', error);
+            // Erro ao registrar diária
             showFeedback(error.message, 'error');
+        } finally {
+            toggleButtonLoading(logButton, false);
         }
     }
 
@@ -587,6 +599,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const day = dayElement.dataset.day.padStart(2, '0');
         const fullDate = `${year}-${month}-${day}`;
 
+        // Adicionar indicador visual de carregamento no dia clicado
+        const originalContent = dayElement.innerHTML;
+        dayElement.innerHTML = '<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mx-auto"></div>';
+        dayElement.style.pointerEvents = 'none';
+
         try {
             const response = await fetch(`${API_URL}/registrar-diaria-especifica`, {
                 method: 'POST',
@@ -606,6 +623,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Erro ao registrar diária específica:', error);
             showFeedback(error.message, 'error');
+            // Restaurar conteúdo original em caso de erro
+            dayElement.innerHTML = originalContent;
+            dayElement.style.pointerEvents = 'auto';
         }
     }
 
@@ -911,7 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showFeedback('Erro ao carregar dados da tabela', 'error');
             }
         } catch (error) {
-            console.error('Erro:', error);
+            // Erro de conexão
             showFeedback('Erro de conexão', 'error');
         }
     }
@@ -1129,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showFeedback('Erro ao excluir registro', 'error');
             }
         } catch (error) {
-            console.error('Erro:', error);
+            // Erro de conexão
             showFeedback('Erro de conexão', 'error');
         }
     };
