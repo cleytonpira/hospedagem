@@ -1,8 +1,8 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Caminho do banco de dados - sempre usar arquivo persistente
-const DB_PATH = path.join(__dirname, 'hospedagem.db');
+// Caminho do banco de dados - usar memória em produção (Vercel)
+const DB_PATH = process.env.NODE_ENV === 'production' ? ':memory:' : path.join(__dirname, 'hospedagem.db');
 
 class Database {
     constructor() {
