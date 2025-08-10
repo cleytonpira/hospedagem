@@ -3,8 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="description" content="Controle de Hospedagem - Sistema para gerenciamento de hospedagens e reservas">
+    <meta name="keywords" content="hospedagem, controle, reservas, gestão, hotel, pousada">
+    <meta name="author" content="Controle de Hospedagem">
     <title>Controle de Hospedagem</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.svg">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,16 +21,26 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
-        <header class="flex justify-between items-center mb-4">
-            <div class="text-center flex-grow">
-                <h1 class="text-2xl md:text-4xl font-bold text-gray-900">Controle de Hospedagem</h1>
-                <p id="welcome-message" class="text-base md:text-lg text-gray-600 mt-2">Bem-vindo(a)!</p>
+    <!-- Header Moderno Fixo -->
+    <header class="modern-header fixed top-0 left-0 right-0 bg-green-100 bg-opacity-90 backdrop-blur-sm border-b border-green-400 z-50">
+        <div class="container mx-auto px-4 py-2 flex justify-between items-center max-w-7xl">
+            <div class="flex items-center space-x-3">
+                <img src="favicon.svg" alt="Logo" class="w-6 h-6">
+                <h1 class="text-sm md:text-lg font-semibold text-green-700">
+                    <span class="md:hidden">Hospedagem</span>
+                    <span class="hidden md:inline">Controle de Hospedagem</span>
+                </h1>
             </div>
-            <button id="open-settings-modal" class="text-gray-500 hover:text-gray-700">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            </button>
-        </header>
+            <div class="flex items-center space-x-4">
+                <span id="user-name" class="text-sm text-green-700 font-medium">Usuário</span>
+                <button id="open-settings-modal" class="p-1.5 text-green-700 hover:text-green-800 hover:bg-green-200 hover:bg-opacity-50 rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl" style="margin-top: 50px;">
 
         <main id="main-content">
             <!-- Botão Flutuante para Registrar Diária -->
@@ -36,7 +55,7 @@
             </button>
             
             <!-- Feedback para o botão flutuante -->
-            <div id="log-feedback" class="fixed top-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 opacity-0 translate-y-2 z-30"></div>
+            <div id="log-feedback" class="fixed top-24 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 opacity-0 translate-y-2 z-30"></div>
 
             <!-- Seção de Resumos Mensais -->
             <section class="mb-8">

@@ -3,6 +3,25 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
+/* Header Moderno */
+.modern-header {
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+}
+
+.modern-header h1 {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+@media (max-width: 768px) {
+    .modern-header h1 {
+        font-size: 1.125rem;
+    }
+}
+
 /* Feedback de Ações */
 .saved-feedback {
     transition: opacity 0.5s ease-in-out;
@@ -393,6 +412,19 @@ body {
 
 #database-editor-modal .table-actions button:hover {
     text-decoration: underline;
+}
+
+/* Estilos para o gráfico de estatísticas */
+#monthly-stats-chart {
+    height: 300px !important;
+    max-height: 300px;
+}
+
+@media (max-width: 768px) {
+    #monthly-stats-chart {
+        height: 250px !important;
+        max-height: 250px;
+    }
 }
 
 /* Responsividade para o editor de banco */

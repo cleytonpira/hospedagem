@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedFeedback = document.getElementById('saved-feedback');
     const logStayButton = document.getElementById('log-stay-button');
     const logFeedback = document.getElementById('log-feedback');
-    const welcomeMessage = document.getElementById('welcome-message');
+    const userNameDisplay = document.getElementById('user-name');
     const currentMonthSummaryDiv = document.getElementById('current-month-summary');
     
     // Editor de Banco de Dados
@@ -118,14 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Carrega as configurações do usuário nos campos do formulário e na mensagem de boas-vindas.
+     * Carrega as configurações do usuário nos campos do formulário e no header.
      */
     function loadSettings() {
         const { nome, localPadrao, valorDiaria } = appData.usuario;
         userNameInput.value = nome;
         locationNameInput.value = localPadrao;
         dailyRateInput.value = valorDiaria > 0 ? valorDiaria.toFixed(2) : '';
-        welcomeMessage.textContent = nome ? `Bem-vindo(a), ${nome}!` : 'Bem-vindo(a)!';
+        userNameDisplay.textContent = nome || 'Usuário';
     }
 
     /**
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         generalStatisticsDiv.innerHTML = `
             <h3 class="text-xl font-bold mb-4 text-gray-800">Estatísticas Gerais</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6">
                 <div class="text-center p-2 md:p-4 bg-blue-50 rounded-lg">
                     <div class="text-lg md:text-2xl font-bold text-blue-600 leading-tight">${totalMeses}</div>
                     <div class="text-xs md:text-sm text-gray-600 leading-tight">Meses Hospedados</div>
@@ -201,7 +201,162 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="text-xs md:text-sm text-gray-600 leading-tight">Média Mensal</div>
                 </div>
             </div>
+            
+            <!-- Gráfico de Estatísticas Mensais -->
+            <div class="mt-6">
+                <h4 class="text-lg font-semibold mb-4 text-gray-700">Evolução Mensal</h4>
+                <div class="rounded-lg">
+                    <canvas id="monthly-stats-chart" width="400" height="200"></canvas>
+                </div>
+            </div>
         `;
+        
+        // Renderizar o gráfico após o DOM ser atualizado
+        setTimeout(() => {
+            renderMonthlyStatsChart();
+        }, 100);
+    }
+
+    /**
+     * Renderiza o gráfico de estatísticas mensais com dois eixos.
+     */
+    function renderMonthlyStatsChart() {
+        const canvas = document.getElementById('monthly-stats-chart');
+        if (!canvas || !appData || !appData.hospedagens) {
+            return;
+        }
+        
+        // Destruir gráfico existente se houver
+        if (window.monthlyChart) {
+            window.monthlyChart.destroy();
+        }
+        
+        const hospedagens = appData.hospedagens;
+        const monthKeys = Object.keys(hospedagens).sort();
+        
+        // Preparar dados para o gráfico
+        const labels = [];
+        const diasData = [];
+        const valorPagoData = [];
+        
+        monthKeys.forEach(monthKey => {
+            const month = hospedagens[monthKey];
+            // Mostrar apenas meses fechados
+            if (!month.fechado) {
+                return;
+            }
+            
+            const [year, monthNum] = monthKey.split('-');
+            const monthName = monthNames[parseInt(monthNum) - 1];
+            const shortLabel = `${monthName.substring(0, 3)}/${year.substring(2)}`;
+            
+            labels.push(shortLabel);
+            diasData.push(month.dias ? month.dias.length : 0);
+            valorPagoData.push(month.valorPago ? month.valorPago : 0);
+        });
+        
+        // Calcular média mensal do valor pago
+        const mediaValorPago = valorPagoData.length > 0 ? 
+            valorPagoData.reduce((sum, val) => sum + val, 0) / valorPagoData.length : 0;
+        const mediaData = new Array(labels.length).fill(mediaValorPago);
+        
+        const ctx = canvas.getContext('2d');
+        
+        window.monthlyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Valor Pago (R$)',
+                        data: valorPagoData,
+                        backgroundColor: 'rgba(139, 69, 19, 0.6)',
+                        borderColor: 'rgba(139, 69, 19, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y1',
+                        type: 'bar'
+                    },
+                    {
+                        label: 'Número de Dias',
+                        data: diasData,
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y',
+                        type: 'line'
+                    },
+                    {
+                        label: 'Média Mensal (R$)',
+                        data: mediaData,
+                        borderColor: 'rgba(220, 38, 127, 1)',
+                        backgroundColor: 'rgba(220, 38, 127, 0.1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0,
+                        yAxisID: 'y1',
+                        type: 'line',
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: false
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Número de Dias'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Valor Pago (R$)'
+                        },
+                        grid: {
+                            drawOnChartArea: true
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        });
     }
 
     /**
@@ -654,11 +809,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Configurar cores baseadas no tipo
         if (type === 'success') {
-            element.className = 'fixed top-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
+            element.className = 'fixed top-24 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
         } else if (type === 'error') {
-            element.className = 'fixed top-20 right-6 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
+            element.className = 'fixed top-24 right-6 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
         } else {
-            element.className = 'fixed top-20 right-6 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
+            element.className = 'fixed top-24 right-6 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg transform transition-all duration-300 z-30';
         }
 
         if (message) {
