@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Valor Pago (R$)',
+                        label: 'Pago R$',
                         data: valorPagoData,
                         backgroundColor: 'rgba(139, 69, 19, 0.6)',
                         borderColor: 'rgba(139, 69, 19, 1)',
@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: 'bar'
                     },
                     {
-                        label: 'Número de Dias',
+                        label: 'Dias',
                         data: diasData,
                         borderColor: 'rgba(59, 130, 246, 1)',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: 'line'
                     },
                     {
-                        label: 'Média Mensal (R$)',
+                        label: 'Média R$',
                         data: mediaData,
                         borderColor: 'rgba(220, 38, 127, 1)',
                         backgroundColor: 'rgba(220, 38, 127, 0.1)',
@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         position: 'left',
                         title: {
                             display: true,
-                            text: 'Número de Dias'
+                            text: 'Dias'
                         },
                         grid: {
                             drawOnChartArea: false
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         },
                         ticks: {
                             callback: function(value) {
-                                return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                                return value.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
                             }
                         }
                     }
