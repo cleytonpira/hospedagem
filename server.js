@@ -86,6 +86,9 @@ app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
     try {
         // === INICIANDO REGISTRO DE DIÁRIA ===
         
+        // Extrair latitude e longitude opcionais do corpo da requisição
+        const { latitude, longitude } = req.body;
+        
         // Garantir que o banco esteja conectado
         if (!db.db) {
             await db.connect();
@@ -115,13 +118,39 @@ app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
             return res.status(400).json({ message: 'Este mês já está fechado e não pode ser alterado.' });
         }
 
-        if (appData.hospedagens[monthKey].dias.includes(day)) {
+        // Verificar se dia já existe (compatível com array e objeto)
+        const dayExists = Array.isArray(appData.hospedagens[monthKey].dias) 
+            ? appData.hospedagens[monthKey].dias.includes(day)
+            : appData.hospedagens[monthKey].dias.hasOwnProperty(day);
+            
+        if (dayExists) {
             // Diária já registrada, retornando erro
             return res.status(400).json({ message: 'A diária para este dia já foi registrada.' });
         }
 
-        // Adicionando dia à lista
-        appData.hospedagens[monthKey].dias.push(day);
+        // Adicionando dia à lista com timestamp e localização
+        const brasiliaDate = getBrasiliaDate();
+        const dayData = {
+            timestamp: brasiliaDate.toISOString(),
+            latitude: latitude || null,
+            longitude: longitude || null
+        };
+        
+        // Verificar se dias é array (formato legado) ou objeto (novo formato)
+        if (Array.isArray(appData.hospedagens[monthKey].dias)) {
+            // Converter array legado para objeto
+            const legacyDays = appData.hospedagens[monthKey].dias;
+            appData.hospedagens[monthKey].dias = {};
+            legacyDays.forEach(legacyDay => {
+                appData.hospedagens[monthKey].dias[legacyDay] = {
+                    timestamp: null,
+                    latitude: null,
+                    longitude: null
+                };
+            });
+        }
+        
+        appData.hospedagens[monthKey].dias[day] = dayData;
         
         // Salvando dados
         await db.saveAllData(appData);
@@ -143,7 +172,7 @@ app.post('/api/hospedagem/registrar-diaria-especifica', async (req, res) => {
             await db.connect();
         }
         
-        const { date } = req.body; // Espera uma data no formato "YYYY-MM-DD"
+        const { date, latitude, longitude } = req.body; // Espera uma data no formato "YYYY-MM-DD" e coordenadas opcionais
 
         if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
             return res.status(400).json({ message: 'Formato de data inválido. Use YYYY-MM-DD.' });
@@ -155,24 +184,42 @@ app.post('/api/hospedagem/registrar-diaria-especifica', async (req, res) => {
         const monthKey = `${year}-${String(month).padStart(2, '0')}`;
         
         if (!appData.hospedagens[monthKey]) {
-            appData.hospedagens[monthKey] = { dias: [], fechado: false };
+            appData.hospedagens[monthKey] = { dias: {}, fechado: false };
         }
 
         if (appData.hospedagens[monthKey].fechado) {
             return res.status(400).json({ message: 'Este mês já está fechado e não pode ser alterado.' });
         }
 
-        const dayIndex = appData.hospedagens[monthKey].dias.indexOf(day);
+        // Verificar se dias é array (formato legado) ou objeto (novo formato)
+        if (Array.isArray(appData.hospedagens[monthKey].dias)) {
+            // Converter array legado para objeto
+            const legacyDays = appData.hospedagens[monthKey].dias;
+            appData.hospedagens[monthKey].dias = {};
+            legacyDays.forEach(legacyDay => {
+                appData.hospedagens[monthKey].dias[legacyDay] = {
+                    timestamp: null,
+                    latitude: null,
+                    longitude: null
+                };
+            });
+        }
+
+        const dayExists = appData.hospedagens[monthKey].dias.hasOwnProperty(day);
         let message = '';
 
-        if (dayIndex > -1) {
+        if (dayExists) {
             // Dia existe, remover
-            appData.hospedagens[monthKey].dias.splice(dayIndex, 1);
+            delete appData.hospedagens[monthKey].dias[day];
             message = 'Diária removida com sucesso!';
         } else {
             // Dia não existe, adicionar
-            appData.hospedagens[monthKey].dias.push(day);
-            appData.hospedagens[monthKey].dias.sort((a, b) => a - b); // Mantém os dias ordenados
+            const brasiliaDate = getBrasiliaDate();
+            appData.hospedagens[monthKey].dias[day] = {
+                timestamp: brasiliaDate.toISOString(),
+                latitude: latitude || null,
+                longitude: longitude || null
+            };
             message = 'Diária registrada com sucesso!';
         }
 

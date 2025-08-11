@@ -34,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const recordForm = document.getElementById('record-form');
     const cancelRecordEditBtn = document.getElementById('cancel-record-edit');
     const saveRecordBtn = document.getElementById('save-record');
+    
+    // Modal de Detalhes do Dia
+    const dayDetailsModal = document.getElementById('day-details-modal');
+    const closeDayDetailsBtn = document.getElementById('close-day-details');
+    const dayDetailsTitle = document.getElementById('day-details-title');
+    const dayDetailsContent = document.getElementById('day-details-content');
 
     // --- Constantes e Estado da Aplicação ---
     const API_URL = '/api/hospedagem';
@@ -52,6 +58,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
         const brasiliaTime = new Date(utc + (-3 * 3600000));
         return brasiliaTime;
+    }
+    
+    /**
+     * Extrai os dias de hospedagem de um objeto de hospedagem,
+     * lidando com formato legado (array) e novo formato (objeto).
+     * @param {Object} monthData - Dados do mês de hospedagem
+     * @returns {Array} Array com os números dos dias
+     */
+    function extractDaysFromHospedagem(monthData) {
+        if (!monthData || !monthData.dias) {
+            return [];
+        }
+        
+        // Se dias é um array (formato legado), retornar diretamente
+        if (Array.isArray(monthData.dias)) {
+            return monthData.dias;
+        }
+        
+        // Se dias é um objeto (novo formato), extrair as chaves
+        if (typeof monthData.dias === 'object') {
+            return Object.keys(monthData.dias).map(day => parseInt(day));
+        }
+        
+        return [];
     }
     
     // Estado do Editor de Banco
@@ -194,7 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(hospedagens).forEach(monthKey => {
             const month = hospedagens[monthKey];
             totalMeses++;
-            totalDias += month.dias ? month.dias.length : 0;
+            const dias = extractDaysFromHospedagem(month);
+            totalDias += dias.length;
             
             if (month.fechado && month.valorPago) {
                 totalValorPago += month.valorPago;
@@ -274,7 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const shortLabel = `${monthName.substring(0, 3)}/${year.substring(2)}`;
             
             labels.push(shortLabel);
-            diasData.push(month.dias ? month.dias.length : 0);
+            const dias = extractDaysFromHospedagem(month);
+            diasData.push(dias.length);
             valorPagoData.push(month.valorPago ? month.valorPago : 0);
         });
         
@@ -426,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const monthDate = new Date(parseInt(year), parseInt(month) - 1, 1);
             const monthName = monthNames[monthDate.getMonth()];
             const dailyRate = parseFloat(appData.usuario.valorDiaria) || 0;
-            const totalDays = monthData.dias.length;
+            const totalDays = extractDaysFromHospedagem(monthData).length;
             const totalCost = totalDays * dailyRate;
             const isClosed = monthData.fechado;
             
@@ -474,10 +506,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthName = monthNames[date.getMonth()];
         const year = date.getFullYear();
         const title = `${monthName} de ${year}`;
-        const totalDays = monthData.dias.length;
+        const totalDays = extractDaysFromHospedagem(monthData).length;
         const totalCost = totalDays * dailyRate;
 
-        const detailsHtml = totalDays > 0 ? createCalendar(date, monthData.dias) : '<p class="text-sm text-gray-500">Nenhuma diária registrada.</p>';
+        const detailsHtml = totalDays > 0 ? createCalendar(date, extractDaysFromHospedagem(monthData), monthData) : '<p class="text-sm text-gray-500">Nenhuma diária registrada.</p>';
         const closeButtonHtml = createCloseMonthButton(monthKey, isClosed, monthData);
 
         element.innerHTML = `
@@ -507,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthKey = getMonthKey(monthDate);
         const monthData = appData.hospedagens[monthKey] || { dias: [], fechado: false };
         const dailyRate = parseFloat(appData.usuario.valorDiaria) || 0;
-        const totalDays = monthData.dias.length;
+        const totalDays = extractDaysFromHospedagem(monthData).length;
         const totalCost = totalDays * dailyRate;
         const isClosed = monthData.fechado;
         
@@ -551,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="text-xs md:text-sm text-gray-600">Valor da Diária</div>
                     </div>
                 </div>
-                ${createCalendar(monthDate, monthData.dias)}
+                ${createCalendar(monthDate, extractDaysFromHospedagem(monthData), monthData)}
                 <div class="mt-4 flex justify-end">
                     <button onclick="${isClosed ? `reopenMonth('${monthKey}')` : `closeMonth('${monthKey}')`}" class="${isClosed ? 'bg-yellow-500 hover:bg-yellow-700' : 'bg-green-500 hover:bg-green-700'} text-white font-bold py-2 px-4 rounded">
                         ${isClosed ? 'Reabrir Mês' : 'Fechar Mês'}
@@ -621,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Cria a estrutura HTML de um calendário para um mês específico.
      */
-    function createCalendar(date, hostedDays) {
+    function createCalendar(date, hostedDays, monthData = null) {
         const year = date.getFullYear();
         const month = date.getMonth();
         const firstDay = new Date(year, month, 1).getDay();
@@ -632,6 +664,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const today = getBrasiliaDate();
         const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
         const currentDay = today.getDate();
+        
+        // Normalizar hostedDays para array de números
+        const normalizedHostedDays = Array.isArray(hostedDays) ? hostedDays : Object.keys(hostedDays || {}).map(day => parseInt(day));
+        
+        // Obter dados completos dos dias (para informações adicionais)
+        const daysData = monthData && !Array.isArray(monthData.dias) ? monthData.dias : {};
         
         // Calcular dias futuros estimados apenas para o mês atual
         const estimatedDays = calculateEstimatedFutureDays(date);
@@ -650,8 +688,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 dayClass += ' weekend';
             }
             
-            if (hostedDays.includes(day)) {
+            let dayAttributes = `data-day="${day}"`;
+            
+            if (normalizedHostedDays.includes(day)) {
                 dayClass += ' has-stay';
+                
+                // Verificar se há informações adicionais para este dia
+                const dayData = daysData[day];
+                if (dayData && (dayData.timestamp || dayData.latitude || dayData.longitude)) {
+                    dayClass += ' has-details';
+                    dayAttributes += ` data-year="${year}" data-month="${month + 1}" data-has-details="true"`;
+                    if (dayData.timestamp) dayAttributes += ` data-timestamp="${dayData.timestamp}"`;
+                    if (dayData.latitude) dayAttributes += ` data-latitude="${dayData.latitude}"`;
+                    if (dayData.longitude) dayAttributes += ` data-longitude="${dayData.longitude}"`;
+                }
             } else if (estimatedDays.includes(day)) {
                 dayClass += ' estimated-stay';
             }
@@ -659,9 +709,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isCurrentMonth && day === currentDay) {
                 dayClass += ' current-day';
             }
-            html += `<div class="${dayClass}" data-day="${day}">${day}</div>`;
+            html += `<div class="${dayClass}" ${dayAttributes}>${day}</div>`;
         }
         html += '</div>';
+        
+        // Event listeners para clique e duplo clique serão gerenciados globalmente
+        // para permitir coexistência das duas funcionalidades
         
         return html;
     }
@@ -735,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleCloseMonth(monthKey) {
         const monthData = appData.hospedagens[monthKey];
         const dailyRate = parseFloat(appData.usuario.valorDiaria) || 0;
-        const calculatedCost = monthData.dias.length * dailyRate;
+        const calculatedCost = extractDaysFromHospedagem(monthData).length * dailyRate;
 
         // Preencher dados no modal
         closeMonthNameSpan.textContent = monthKey;
@@ -924,6 +977,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === closeMonthModal) closeCloseMonthModal(); // Fecha se clicar no fundo
     });
 
+    // Controle da Modal de Detalhes do Dia
+    closeDayDetailsBtn.addEventListener('click', closeDayDetailsModal);
+    dayDetailsModal.addEventListener('click', (e) => {
+        if (e.target === dayDetailsModal) closeDayDetailsModal(); // Fecha se clicar no fundo
+    });
+
     // Permitir confirmar com Enter no campo de valor pago
     paidAmountInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -931,10 +990,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Variáveis para controle de toque em mobile
+    // Variáveis para controle de toque em mobile e clique/duplo clique
     let lastTouchTime = 0;
     let lastTouchedElement = null;
+    let clickTimeout = null;
     const DOUBLE_TAP_DELAY = 300; // 300ms para detectar duplo toque
+    const CLICK_DELAY = 250; // 250ms para distinguir clique simples de duplo clique
 
     // Delegação de eventos para acordeão e botão de fechar mês
     document.addEventListener('click', (event) => {
@@ -953,9 +1014,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const calendarDay = event.target.closest('.calendar-day:not(.empty)');
-        if (calendarDay) {
-            // Verifica se é um duplo clique (apenas para desktop)
-            if (event.detail === 2 && !isMobileDevice()) {
+        if (calendarDay && !isMobileDevice()) {
+            // Limpar timeout anterior se existir
+            if (clickTimeout) {
+                clearTimeout(clickTimeout);
+                clickTimeout = null;
+            }
+
+            if (event.detail === 1) {
+                // Primeiro clique - aguardar para ver se haverá um segundo
+                clickTimeout = setTimeout(() => {
+                    // Clique simples confirmado - abrir detalhes se o dia tiver detalhes
+                    if (calendarDay.classList.contains('has-details')) {
+                        const year = parseInt(calendarDay.dataset.year);
+                        const month = parseInt(calendarDay.dataset.month);
+                        const day = parseInt(calendarDay.textContent);
+                        
+                        const dayData = {
+                            timestamp: calendarDay.dataset.timestamp,
+                            latitude: calendarDay.dataset.latitude,
+                            longitude: calendarDay.dataset.longitude
+                        };
+                        
+                        openDayDetailsModal(day, month, year, dayData);
+                    }
+                    clickTimeout = null;
+                }, CLICK_DELAY);
+            } else if (event.detail === 2) {
+                // Duplo clique - registrar/remover diária
                 event.preventDefault();
                 handleDayDoubleClick(calendarDay);
             }
@@ -985,12 +1071,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const timeDiff = currentTime - lastTouchTime;
             
             if (timeDiff < DOUBLE_TAP_DELAY && lastTouchedElement === calendarDay) {
-                // Duplo toque detectado
+                // Duplo toque detectado - registrar/remover diária
                 handleDayDoubleClick(calendarDay);
                 lastTouchTime = 0; // Reset para evitar triplo toque
                 lastTouchedElement = null;
             } else {
-                // Primeiro toque
+                // Primeiro toque - verificar se deve abrir detalhes
+                if (calendarDay.classList.contains('has-details')) {
+                    // Aguardar um pouco para ver se haverá um segundo toque
+                    setTimeout(() => {
+                        // Se ainda é o mesmo elemento e não houve segundo toque
+                        if (lastTouchedElement === calendarDay && 
+                            (new Date().getTime() - lastTouchTime) >= DOUBLE_TAP_DELAY) {
+                            
+                            const year = parseInt(calendarDay.dataset.year);
+                            const month = parseInt(calendarDay.dataset.month);
+                            const day = parseInt(calendarDay.textContent);
+                            
+                            const dayData = {
+                                timestamp: calendarDay.dataset.timestamp,
+                                latitude: calendarDay.dataset.latitude,
+                                longitude: calendarDay.dataset.longitude
+                            };
+                            
+                            openDayDetailsModal(day, month, year, dayData);
+                            
+                            // Reset para evitar ações duplicadas
+                            lastTouchTime = 0;
+                            lastTouchedElement = null;
+                        }
+                    }, DOUBLE_TAP_DELAY + 50);
+                }
+                
                 lastTouchTime = currentTime;
                 lastTouchedElement = calendarDay;
             }
@@ -1063,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthKey = getMonthKey(monthDate);
         const monthData = appData.hospedagens[monthKey] || { dias: [], fechado: false };
         const dailyRate = parseFloat(appData.usuario.valorDiaria) || 0;
-        const totalDays = monthData.dias.length;
+        const totalDays = extractDaysFromHospedagem(monthData).length;
         const totalCost = totalDays * dailyRate;
         const isClosed = monthData.fechado;
 
@@ -1097,14 +1209,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="text-xs md:text-sm text-gray-600">Valor da Diária</div>
                     </div>
                 </div>
-                ${createCalendar(monthDate, monthData.dias)}
+                ${createCalendar(monthDate, extractDaysFromHospedagem(monthData), monthData)}
                 
                 <!-- Lista de dias com hospedagem -->
-                ${monthData.dias.length > 0 ? `
+                ${extractDaysFromHospedagem(monthData).length > 0 ? `
                     <div class="mt-6">
                         <h4 class="text-lg font-semibold mb-3 text-gray-700">Dias com Hospedagem:</h4>
                         <div class="grid grid-cols-7 gap-2">
-                            ${monthData.dias.sort((a, b) => parseInt(a) - parseInt(b)).map(day => `
+                            ${extractDaysFromHospedagem(monthData).sort((a, b) => parseInt(a) - parseInt(b)).map(day => `
                                 <div class="bg-green-100 text-green-800 text-center py-2 px-3 rounded font-medium">
                                     ${day}
                                 </div>
@@ -1264,7 +1376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Dias (JSON)</label>
-                    <input type="text" name="dias" value="${record?.dias || ''}" placeholder="Ex: [1,2,3]" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <textarea name="dias" rows="6" placeholder="Ex: {\"1\": {\"timestamp\": \"2025-01-01T00:00:00.000Z\", \"latitude\": null, \"longitude\": null}}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm">${record?.dias || ''}</textarea>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Fechado</label>
@@ -1427,6 +1539,102 @@ document.addEventListener('DOMContentLoaded', () => {
             closeRecordEditor();
         }
     });
+
+    // --- Funções do Modal de Detalhes do Dia ---
+
+    /**
+     * Abre o modal de detalhes do dia com informações adicionais.
+     */
+    function openDayDetailsModal(day, month, year, dayData) {
+        const date = new Date(year, month - 1, day);
+        const formattedDate = date.toLocaleDateString('pt-BR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        dayDetailsTitle.textContent = `Detalhes - ${formattedDate}`;
+        
+        let content = '<div class="space-y-4">';
+        
+        // Informações de timestamp
+        if (dayData.timestamp) {
+            const createdDate = new Date(dayData.timestamp);
+            const formattedTimestamp = createdDate.toLocaleString('pt-BR');
+            content += `
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-1">📅 Data de Criação</h4>
+                    <p class="text-gray-600">${formattedTimestamp}</p>
+                </div>
+            `;
+        }
+        
+        // Informações de localização
+        if (dayData.latitude && dayData.longitude) {
+            content += `
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <h4 class="font-semibold text-gray-700 mb-2">📍 Localização</h4>
+                    <p class="text-gray-600 text-sm mb-3">Lat: ${dayData.latitude}, Lng: ${dayData.longitude}</p>
+                    <div id="day-details-map" class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <span class="text-gray-500">Carregando mapa...</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        content += '</div>';
+        dayDetailsContent.innerHTML = content;
+        
+        // Carregar mapa se houver coordenadas
+        if (dayData.latitude && dayData.longitude) {
+            loadMapForDayDetails(dayData.latitude, dayData.longitude);
+        }
+        
+        dayDetailsModal.classList.remove('hidden');
+    }
+
+    /**
+     * Fecha o modal de detalhes do dia.
+     */
+    function closeDayDetailsModal() {
+        dayDetailsModal.classList.add('hidden');
+        dayDetailsContent.innerHTML = '';
+    }
+
+    /**
+     * Carrega um mapa simples para mostrar a localização.
+     */
+    function loadMapForDayDetails(latitude, longitude) {
+        const mapContainer = document.getElementById('day-details-map');
+        if (!mapContainer) return;
+        
+        // Converter para números e calcular bbox explicitamente
+        const lat = parseFloat(latitude);
+        const lng = parseFloat(longitude);
+        const offset = 0.01;
+        
+        const west = lng - offset;
+        const south = lat - offset;
+        const east = lng + offset;
+        const north = lat + offset;
+        
+        const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${west},${south},${east},${north}&layer=mapnik&marker=${lat},${lng}`;
+        
+        mapContainer.innerHTML = `
+            <iframe 
+                width="100%" 
+                height="100%" 
+                frameborder="0" 
+                style="border:0; border-radius: 0.5rem;" 
+                src="${mapUrl}" 
+                allowfullscreen>
+            </iframe>
+        `;
+    }
+
+    // Tornar a função global para uso nos event listeners
+    window.openDayDetailsModal = openDayDetailsModal;
 
     // --- Inicialização ---
     loadData();
