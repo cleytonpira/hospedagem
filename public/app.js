@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const paidAmountInput = document.getElementById('paid-amount');
     const cancelCloseMonthBtn = document.getElementById('cancel-close-month');
     const confirmCloseMonthBtn = document.getElementById('confirm-close-month');
-    const userNameInput = document.getElementById('user-name');
+    const userNameInput = document.getElementById('user-name-input');
     const locationNameInput = document.getElementById('location-name');
     const dailyRateInput = document.getElementById('daily-rate');
     const saveSettingsButton = document.getElementById('save-settings-button');
@@ -39,6 +39,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_URL = '/api/hospedagem';
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     let appData = getInitialData();
+    
+    // === FUNÇÕES UTILITÁRIAS PARA FUSO HORÁRIO DE BRASÍLIA ===
+    
+    /**
+     * Obtém a data atual no fuso horário de Brasília (UTC-3)
+     * @returns {Date} Data atual em Brasília
+     */
+    function getBrasiliaDate() {
+        const now = new Date();
+        // Converter para UTC e depois subtrair 3 horas para Brasília
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const brasiliaTime = new Date(utc + (-3 * 3600000));
+        return brasiliaTime;
+    }
     
     // Estado do Editor de Banco
     let currentTable = 'usuario';
@@ -122,17 +136,26 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function loadSettings() {
         const { nome, localPadrao, valorDiaria } = appData.usuario;
-        userNameInput.value = nome;
-        locationNameInput.value = localPadrao;
-        dailyRateInput.value = valorDiaria > 0 ? valorDiaria.toFixed(2) : '';
-        userNameDisplay.textContent = nome || 'Usuário';
+        
+        if (userNameInput) {
+            userNameInput.value = nome || '';
+        }
+        if (locationNameInput) {
+            locationNameInput.value = localPadrao || '';
+        }
+        if (dailyRateInput) {
+            dailyRateInput.value = valorDiaria > 0 ? valorDiaria.toFixed(2) : '';
+        }
+        if (userNameDisplay) {
+            userNameDisplay.textContent = nome || 'Usuário';
+        }
     }
 
     /**
      * Renderiza os resumos para o mês atual e todos os meses históricos.
      */
     function renderSummaries() {
-        const today = new Date();
+        const today = getBrasiliaDate();
         const currentMonthDate = new Date(today.getFullYear(), today.getMonth(), 1);
         
         // Limpar container
@@ -365,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function renderHistoricalMonths() {
         const historicalMonthsDiv = document.getElementById('historical-months');
-        const today = new Date();
+        const today = getBrasiliaDate();
         const currentMonthKey = getMonthKey(new Date(today.getFullYear(), today.getMonth(), 1));
         
         // Obter todos os meses dos dados, exceto o atual
@@ -564,8 +587,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         
-        // Obter data atual para destacar o dia
-        const today = new Date();
+        // Obter data atual de Brasília para destacar o dia
+        const today = getBrasiliaDate();
         const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
         const currentDay = today.getDate();
 

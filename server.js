@@ -13,6 +13,31 @@ const db = new Database();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// === FUNÇÕES UTILITÁRIAS PARA FUSO HORÁRIO DE BRASÍLIA ===
+
+/**
+ * Obtém a data atual no fuso horário de Brasília (UTC-3)
+ * @returns {Date} Data atual em Brasília
+ */
+function getBrasiliaDate() {
+    const now = new Date();
+    // Converter para UTC e depois subtrair 3 horas para Brasília
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const brasiliaTime = new Date(utc + (-3 * 3600000));
+    return brasiliaTime;
+}
+
+/**
+ * Obtém a data de ontem no fuso horário de Brasília
+ * @returns {Date} Data de ontem em Brasília
+ */
+function getBrasiliaYesterday() {
+    const today = getBrasiliaDate();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    return yesterday;
+}
+
 // Função de migração removida para preservar integridade dos dados
 
 // Endpoint para obter todos os dados
@@ -70,9 +95,8 @@ app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
         const appData = await db.getAllData();
         // Dados recuperados
 
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
+        // Usar fuso horário de Brasília para calcular ontem
+        const yesterday = getBrasiliaYesterday();
 
         const year = yesterday.getFullYear();
         const month = String(yesterday.getMonth() + 1).padStart(2, '0');
@@ -241,10 +265,10 @@ async function startServer() {
         // Migração removida para preservar dados existentes
         
         app.listen(PORT, () => {
-            // Servidor rodando na porta 3000
+            console.log(`Servidor rodando na porta ${PORT}`);
         });
     } catch (error) {
-        // Erro ao inicializar servidor
+        console.error('Erro ao inicializar servidor:', error);
         process.exit(1);
     }
 }
