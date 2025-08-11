@@ -171,9 +171,36 @@ body {
     border: 2px solid #2f855a;
 }
 
+/* Dias futuros estimados (segundas e terças) */
+.calendar-day.estimated-stay {
+    background-color: #f0fff4; /* Verde bem claro */
+    color: #2d3748;
+    border: 1px dashed #68d391;
+}
+
+.calendar-day.estimated-stay:hover {
+    background-color: #e6fffa;
+    border-color: #48bb78;
+}
+
+/* Prioridade para dia atual sobre estimativa */
+.calendar-day.estimated-stay.current-day {
+    background-color: #4a5568; /* Cinza escuro - mantém a cor original */
+    color: white;
+    border: 2px solid #2d3748;
+}
+
+.calendar-day.estimated-stay.current-day:hover {
+    background-color: #2d3748;
+}
+
 
 
 /* Calendário Expandido */
+.calendar-expanded {
+    min-height: 566px; /* Altura mínima fixa para desktop */
+}
+
 .calendar-expanded .calendar-grid {
     gap: 6px;
     margin-top: 1rem;
@@ -287,6 +314,10 @@ body {
     }
     
     /* Calendário expandido menor no mobile */
+    .calendar-expanded {
+        min-height: auto; /* Remove altura fixa no mobile */
+    }
+    
     .calendar-expanded .calendar-grid {
         gap: 4px;
         margin-top: 0.75rem;

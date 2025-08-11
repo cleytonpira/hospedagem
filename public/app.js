@@ -510,6 +510,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalDays = monthData.dias.length;
         const totalCost = totalDays * dailyRate;
         const isClosed = monthData.fechado;
+        
+        // Calcular dias futuros estimados apenas para o mês atual
+        const today = getBrasiliaDate();
+        const isCurrentMonth = today.getFullYear() === monthDate.getFullYear() && today.getMonth() === monthDate.getMonth();
+        const estimatedFutureDays = isCurrentMonth ? calculateEstimatedFutureDays(monthDate) : [];
+        const estimatedDaysCount = estimatedFutureDays.length;
+        const estimatedCost = estimatedDaysCount * dailyRate;
+        const totalEstimatedDays = totalDays + estimatedDaysCount;
+        const totalEstimatedCost = totalCost + estimatedCost;
 
         const monthName = monthNames[monthDate.getMonth()];
         const year = monthDate.getFullYear();
@@ -530,11 +539,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${statusHtml}
                 <div class="grid grid-cols-3 gap-2 md:gap-4 mb-4">
                     <div class="text-center">
-                        <div class="text-lg md:text-xl font-bold text-blue-600">${totalDays}</div>
-                        <div class="text-xs md:text-sm text-gray-600">Diárias</div>
+                        <div class="text-lg md:text-xl font-bold text-blue-600">${isCurrentMonth ? totalEstimatedDays : totalDays}</div>
+                        <div class="text-xs md:text-sm text-gray-600">${isCurrentMonth ? 'Diárias Estimadas' : 'Diárias'}</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-lg md:text-xl font-bold text-green-600">${formatCurrency(totalCost)}</div>
+                        <div class="text-lg md:text-xl font-bold text-green-600">${formatCurrency(isCurrentMonth ? totalEstimatedCost : totalCost)}</div>
                         <div class="text-xs md:text-sm text-gray-600">Total Estimado</div>
                     </div>
                     <div class="text-center">
@@ -578,6 +587,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Calcula os dias futuros estimados (segundas e terças) para o mês atual.
+     * @param {Date} monthDate - Data do mês.
+     * @returns {Array} Array com os dias futuros estimados.
+     */
+    function calculateEstimatedFutureDays(monthDate) {
+        const today = getBrasiliaDate();
+        const year = monthDate.getFullYear();
+        const month = monthDate.getMonth();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+        
+        if (!isCurrentMonth) {
+            return [];
+        }
+        
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
+        const currentDay = today.getDate();
+        const estimatedDays = [];
+        
+        // Verificar cada dia do mês a partir de hoje
+        for (let day = currentDay + 1; day <= daysInMonth; day++) {
+            const dayOfWeek = (firstDay + day - 1) % 7;
+            // Segunda-feira = 1, Terça-feira = 2
+            if (dayOfWeek === 1 || dayOfWeek === 2) {
+                estimatedDays.push(day);
+            }
+        }
+        
+        return estimatedDays;
+    }
+
+    /**
      * Cria a estrutura HTML de um calendário para um mês específico.
      */
     function createCalendar(date, hostedDays) {
@@ -591,6 +632,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const today = getBrasiliaDate();
         const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
         const currentDay = today.getDate();
+        
+        // Calcular dias futuros estimados apenas para o mês atual
+        const estimatedDays = calculateEstimatedFutureDays(date);
 
         let html = `<div class="calendar-grid" data-year="${year}" data-month="${month + 1}">`;
         weekDays.forEach(day => { html += `<div class="calendar-header">${day}</div>`; });
@@ -608,15 +652,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (hostedDays.includes(day)) {
                 dayClass += ' has-stay';
+            } else if (estimatedDays.includes(day)) {
+                dayClass += ' estimated-stay';
             }
+            
             if (isCurrentMonth && day === currentDay) {
                 dayClass += ' current-day';
             }
             html += `<div class="${dayClass}" data-day="${day}">${day}</div>`;
         }
         html += '</div>';
-        
-
         
         return html;
     }
