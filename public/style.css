@@ -112,17 +112,6 @@ body {
     cursor: pointer;
 }
 
-.calendar-day.has-details::after {
-    content: '•';
-    position: absolute;
-    top: 2px;
-    right: 4px;
-    color: #ffd700;
-    font-size: 12px;
-    font-weight: bold;
-    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
-}
-
 /* Dia atual */
 .calendar-day.current-day {
     background-color: #4a5568; /* Cinza escuro */
@@ -488,5 +477,16 @@ body {
     #database-editor-modal th,
     #database-editor-modal td {
         padding: 0.5rem 0.25rem;
+    }
+    
+    /* Ajustes para detalhes da hospedagem no mobile */
+    #day-details-title {
+        font-size: 1rem !important;
+        line-height: 1.25rem;
+    }
+    
+    /* Labels de coordenadas menores no mobile */
+    .text-gray-600.text-sm {
+        font-size: 0.75rem !important;
     }
 }

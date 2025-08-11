@@ -572,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="grid grid-cols-3 gap-2 md:gap-4 mb-4">
                     <div class="text-center">
                         <div class="text-lg md:text-xl font-bold text-blue-600">${isCurrentMonth ? totalEstimatedDays : totalDays}</div>
-                        <div class="text-xs md:text-sm text-gray-600">${isCurrentMonth ? 'Diárias Estimadas' : 'Diárias'}</div>
+                        <div class="text-xs md:text-sm text-gray-600">${isCurrentMonth ? 'Estimadas (dia)' : 'Diárias'}</div>
                     </div>
                     <div class="text-center">
                         <div class="text-lg md:text-xl font-bold text-green-600">${formatCurrency(isCurrentMonth ? totalEstimatedCost : totalCost)}</div>
@@ -1554,7 +1554,7 @@ document.addEventListener('DOMContentLoaded', () => {
             day: 'numeric'
         });
 
-        dayDetailsTitle.textContent = `Detalhes - ${formattedDate}`;
+        dayDetailsTitle.textContent = formattedDate;
         
         let content = '<div class="space-y-4">';
         
@@ -1563,9 +1563,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const createdDate = new Date(dayData.timestamp);
             const formattedTimestamp = createdDate.toLocaleString('pt-BR');
             content += `
-                <div class="bg-gray-50 p-3 rounded-lg">
+                <div class="bg-gray-50 rounded-lg">
                     <h4 class="font-semibold text-gray-700 mb-1">📅 Data de Criação</h4>
-                    <p class="text-gray-600">${formattedTimestamp}</p>
+                    <p class="text-gray-600 text-sm">${formattedTimestamp}</p>
                 </div>
             `;
         }
@@ -1573,7 +1573,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Informações de localização
         if (dayData.latitude && dayData.longitude) {
             content += `
-                <div class="bg-gray-50 p-3 rounded-lg">
+                <div class="bg-gray-50 rounded-lg">
                     <h4 class="font-semibold text-gray-700 mb-2">📍 Localização</h4>
                     <p class="text-gray-600 text-sm mb-3">Lat: ${dayData.latitude}, Lng: ${dayData.longitude}</p>
                     <div id="day-details-map" class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
