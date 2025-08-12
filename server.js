@@ -15,28 +15,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // === FUNÇÕES UTILITÁRIAS PARA FUSO HORÁRIO DE BRASÍLIA ===
 
-/**
- * Obtém a data atual no fuso horário de Brasília (UTC-3)
- * @returns {Date} Data atual em Brasília
- */
-function getBrasiliaDate() {
-    const now = new Date();
-    // Converter para UTC e depois subtrair 3 horas para Brasília
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const brasiliaTime = new Date(utc + (-3 * 3600000));
-    return brasiliaTime;
-}
-
-/**
- * Obtém a data de ontem no fuso horário de Brasília
- * @returns {Date} Data de ontem em Brasília
- */
-function getBrasiliaYesterday() {
-    const today = getBrasiliaDate();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    return yesterday;
-}
+// Funções de fuso horário removidas - sistema já configurado para UTC-3
 
 // Função de migração removida para preservar integridade dos dados
 
@@ -98,8 +77,10 @@ app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
         const appData = await db.getAllData();
         // Dados recuperados
 
-        // Usar fuso horário de Brasília para calcular ontem
-        const yesterday = getBrasiliaYesterday();
+        // Calcular ontem
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
 
         const year = yesterday.getFullYear();
         const month = String(yesterday.getMonth() + 1).padStart(2, '0');
@@ -129,9 +110,9 @@ app.post('/api/hospedagem/registrar-diaria', async (req, res) => {
         }
 
         // Adicionando dia à lista com timestamp e localização
-        const brasiliaDate = getBrasiliaDate();
+        const currentDate = new Date();
         const dayData = {
-            timestamp: brasiliaDate.toISOString(),
+            timestamp: currentDate.toISOString(),
             latitude: latitude || null,
             longitude: longitude || null
         };
@@ -214,9 +195,9 @@ app.post('/api/hospedagem/registrar-diaria-especifica', async (req, res) => {
             message = 'Diária removida com sucesso!';
         } else {
             // Dia não existe, adicionar
-            const brasiliaDate = getBrasiliaDate();
+            const currentDate = new Date();
             appData.hospedagens[monthKey].dias[day] = {
-                timestamp: brasiliaDate.toISOString(),
+                timestamp: currentDate.toISOString(),
                 latitude: latitude || null,
                 longitude: longitude || null
             };

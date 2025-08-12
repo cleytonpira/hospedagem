@@ -46,19 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     let appData = getInitialData();
     
-    // === FUNÇÕES UTILITÁRIAS PARA FUSO HORÁRIO DE BRASÍLIA ===
-    
-    /**
-     * Obtém a data atual no fuso horário de Brasília (UTC-3)
-     * @returns {Date} Data atual em Brasília
-     */
-    function getBrasiliaDate() {
-        const now = new Date();
-        // Converter para UTC e depois subtrair 3 horas para Brasília
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const brasiliaTime = new Date(utc + (-3 * 3600000));
-        return brasiliaTime;
-    }
+    // === FUNÇÕES UTILITÁRIAS ===
     
     /**
      * Extrai os dias de hospedagem de um objeto de hospedagem,
@@ -185,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Renderiza os resumos para o mês atual e todos os meses históricos.
      */
     function renderSummaries() {
-        const today = getBrasiliaDate();
+        const today = new Date();
         const currentMonthDate = new Date(today.getFullYear(), today.getMonth(), 1);
         
         // Limpar container
@@ -292,11 +280,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const labels = [];
         const diasData = [];
         const valorPagoData = [];
+        const backgroundColors = [];
+        const borderColors = [];
+        
+        // Obter data atual para identificar o mês atual
+        const today = new Date();
+        const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
         
         monthKeys.forEach(monthKey => {
             const month = hospedagens[monthKey];
-            // Mostrar apenas meses fechados
-            if (!month.fechado) {
+            const isCurrentMonth = monthKey === currentMonthKey;
+            
+            // Mostrar meses fechados e o mês atual (se existir)
+            if (!month.fechado && !isCurrentMonth) {
                 return;
             }
             
@@ -306,8 +302,27 @@ document.addEventListener('DOMContentLoaded', () => {
             
             labels.push(shortLabel);
             const dias = extractDaysFromHospedagem(month);
-            diasData.push(dias.length);
-            valorPagoData.push(month.valorPago ? month.valorPago : 0);
+            
+            if (isCurrentMonth) {
+                // Para o mês atual, incluir dias estimados
+                const monthDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+                const estimatedDays = calculateEstimatedFutureDays(monthDate);
+                const totalEstimatedDays = dias.length + estimatedDays.length;
+                const dailyRate = parseFloat(appData.usuario?.valorDiaria) || 0;
+                const totalEstimatedValue = totalEstimatedDays * dailyRate;
+                
+                diasData.push(totalEstimatedDays);
+                valorPagoData.push(totalEstimatedValue);
+                // Cor verde claro para mês atual estimado
+                backgroundColors.push('rgba(34, 197, 94, 0.6)');
+                borderColors.push('rgba(34, 197, 94, 1)');
+            } else {
+                diasData.push(dias.length);
+                valorPagoData.push(month.valorPago ? month.valorPago : 0);
+                // Cor marrom para meses fechados
+                backgroundColors.push('rgba(139, 69, 19, 0.6)');
+                borderColors.push('rgba(139, 69, 19, 1)');
+            }
         });
         
         // Calcular média mensal do valor pago
@@ -325,8 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: 'Pago R$',
                         data: valorPagoData,
-                        backgroundColor: 'rgba(139, 69, 19, 0.6)',
-                        borderColor: 'rgba(139, 69, 19, 1)',
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
                         borderWidth: 1,
                         yAxisID: 'y1',
                         type: 'bar'
@@ -420,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function renderHistoricalMonths() {
         const historicalMonthsDiv = document.getElementById('historical-months');
-        const today = getBrasiliaDate();
+        const today = new Date();
         const currentMonthKey = getMonthKey(new Date(today.getFullYear(), today.getMonth(), 1));
         
         // Obter todos os meses dos dados, exceto o atual
@@ -544,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isClosed = monthData.fechado;
         
         // Calcular dias futuros estimados apenas para o mês atual
-        const today = getBrasiliaDate();
+        const today = new Date();
         const isCurrentMonth = today.getFullYear() === monthDate.getFullYear() && today.getMonth() === monthDate.getMonth();
         const estimatedFutureDays = isCurrentMonth ? calculateEstimatedFutureDays(monthDate) : [];
         const estimatedDaysCount = estimatedFutureDays.length;
@@ -624,7 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * @returns {Array} Array com os dias futuros estimados.
      */
     function calculateEstimatedFutureDays(monthDate) {
-        const today = getBrasiliaDate();
+        const today = new Date();
         const year = monthDate.getFullYear();
         const month = monthDate.getMonth();
         const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
@@ -638,8 +653,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentDay = today.getDate();
         const estimatedDays = [];
         
-        // Verificar cada dia do mês a partir de hoje
-        for (let day = currentDay + 1; day <= daysInMonth; day++) {
+        // Verificar cada dia do mês a partir de hoje (incluindo hoje)
+        for (let day = currentDay; day <= daysInMonth; day++) {
             const dayOfWeek = (firstDay + day - 1) % 7;
             // Segunda-feira = 1, Terça-feira = 2
             if (dayOfWeek === 1 || dayOfWeek === 2) {
@@ -660,8 +675,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
         
-        // Obter data atual de Brasília para destacar o dia
-        const today = getBrasiliaDate();
+        // Obter data atual para destacar o dia
+        const today = new Date();
         const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
         const currentDay = today.getDate();
         
@@ -1563,7 +1578,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const createdDate = new Date(dayData.timestamp);
             const formattedTimestamp = createdDate.toLocaleString('pt-BR');
             content += `
-                <div class="bg-gray-50 rounded-lg">
+                <div class="rounded-lg">
                     <h4 class="font-semibold text-gray-700 mb-1">📅 Data de Criação</h4>
                     <p class="text-gray-600 text-sm">${formattedTimestamp}</p>
                 </div>
@@ -1573,7 +1588,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Informações de localização
         if (dayData.latitude && dayData.longitude) {
             content += `
-                <div class="bg-gray-50 rounded-lg">
+                <div class="rounded-lg">
                     <h4 class="font-semibold text-gray-700 mb-2">📍 Localização</h4>
                     <p class="text-gray-600 text-sm mb-3">Lat: ${dayData.latitude}, Lng: ${dayData.longitude}</p>
                     <div id="day-details-map" class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
