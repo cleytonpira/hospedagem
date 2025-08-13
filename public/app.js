@@ -1365,8 +1365,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <table class="min-w-full bg-white">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Ações</th>
                         ${columns.map(col => `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${col}</th>`).join('')}
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -1375,6 +1375,18 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTableData.forEach((record, index) => {
             html += `
                 <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editRecord(${index})" class="text-blue-600 hover:text-blue-900 mr-2 p-1 rounded hover:bg-blue-50" title="Editar">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="deleteRecord(${index})" class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50" title="Excluir">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </td>
                     ${columns.map(col => {
                         let value = record[col];
                         if (col.includes('data') && value) {
@@ -1382,10 +1394,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         return `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${value || ''}</td>`;
                     }).join('')}
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="editRecord(${index})" class="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
-                        <button onclick="deleteRecord(${index})" class="text-red-600 hover:text-red-900">Excluir</button>
-                    </td>
                 </tr>
             `;
         });
@@ -1421,6 +1429,143 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Inicializa o editor visual de dias.
+     */
+    function initDaysVisualEditor(diasJson) {
+        const visualEditor = document.getElementById('days-visual-editor');
+        const addDayBtn = document.getElementById('add-day-btn');
+        const toggleJsonBtn = document.getElementById('toggle-json-view');
+        const jsonTextarea = document.getElementById('dias-json-textarea');
+        
+        let diasData = {};
+        let isJsonViewVisible = false;
+        
+        // Parse do JSON inicial
+        try {
+            diasData = diasJson ? JSON.parse(diasJson) : {};
+        } catch (e) {
+            diasData = {};
+        }
+        
+        function renderDaysEditor() {
+            const days = Object.keys(diasData).sort((a, b) => parseInt(a) - parseInt(b));
+            
+            visualEditor.innerHTML = days.length === 0 ? 
+                '<div class="text-gray-500 text-sm text-center py-4">Nenhum dia adicionado</div>' :
+                days.map(day => {
+                    const dayData = diasData[day];
+                    return `
+                        <div class="flex items-center gap-2 p-2 bg-gray-50 rounded border" data-day="${day}">
+                            <div class="flex-1 grid grid-cols-4 gap-2 text-xs">
+                                <div>
+                                    <label class="block text-gray-600 mb-1">Dia:</label>
+                                    <input type="number" min="1" max="31" value="${day}" class="day-input w-full px-1 py-1 border rounded text-center" onchange="updateDayNumber(this, '${day}')">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-600 mb-1">Data/Hora:</label>
+                                    <input type="datetime-local" value="${dayData.timestamp ? new Date(dayData.timestamp).toISOString().slice(0, 16) : ''}" class="timestamp-input w-full px-1 py-1 border rounded text-xs" onchange="updateDayData('${day}', 'timestamp', this.value)">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-600 mb-1">Latitude:</label>
+                                    <input type="number" step="any" value="${dayData.latitude || ''}" placeholder="null" class="latitude-input w-full px-1 py-1 border rounded text-xs" onchange="updateDayData('${day}', 'latitude', this.value)">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-600 mb-1">Longitude:</label>
+                                    <input type="number" step="any" value="${dayData.longitude || ''}" placeholder="null" class="longitude-input w-full px-1 py-1 border rounded text-xs" onchange="updateDayData('${day}', 'longitude', this.value)">
+                                </div>
+                            </div>
+                            <button type="button" onclick="removeDay('${day}')" class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded">×</button>
+                        </div>
+                    `;
+                }).join('');
+        }
+        
+        function updateJsonTextarea() {
+            jsonTextarea.value = JSON.stringify(diasData, null, 2);
+        }
+        
+        window.updateDayNumber = function(input, oldDay) {
+            const newDay = input.value;
+            if (newDay !== oldDay && newDay >= 1 && newDay <= 31 && !diasData[newDay]) {
+                diasData[newDay] = diasData[oldDay];
+                delete diasData[oldDay];
+                renderDaysEditor();
+                updateJsonTextarea();
+            } else {
+                input.value = oldDay; // Reverter se inválido
+            }
+        };
+        
+        window.updateDayData = function(day, field, value) {
+            if (!diasData[day]) diasData[day] = {};
+            
+            if (field === 'timestamp') {
+                diasData[day][field] = value ? new Date(value).toISOString() : null;
+            } else if (field === 'latitude' || field === 'longitude') {
+                diasData[day][field] = value === '' ? null : parseFloat(value);
+            }
+            
+            updateJsonTextarea();
+        };
+        
+        window.removeDay = function(day) {
+            delete diasData[day];
+            renderDaysEditor();
+            updateJsonTextarea();
+        };
+        
+        addDayBtn.addEventListener('click', () => {
+            const availableDays = [];
+            for (let i = 1; i <= 31; i++) {
+                if (!diasData[i]) availableDays.push(i);
+            }
+            
+            if (availableDays.length === 0) {
+                alert('Todos os dias do mês já foram adicionados.');
+                return;
+            }
+            
+            const newDay = availableDays[0];
+            diasData[newDay] = {
+                timestamp: new Date().toISOString(),
+                latitude: null,
+                longitude: null
+            };
+            
+            renderDaysEditor();
+            updateJsonTextarea();
+        });
+        
+        toggleJsonBtn.addEventListener('click', () => {
+            isJsonViewVisible = !isJsonViewVisible;
+            
+            if (isJsonViewVisible) {
+                visualEditor.classList.add('hidden');
+                jsonTextarea.classList.remove('hidden');
+                toggleJsonBtn.textContent = 'Ver Visual';
+                addDayBtn.style.display = 'none';
+            } else {
+                // Sincronizar dados do JSON para o editor visual
+                try {
+                    diasData = JSON.parse(jsonTextarea.value || '{}');
+                    renderDaysEditor();
+                } catch (e) {
+                    alert('JSON inválido. Mantendo dados anteriores.');
+                }
+                
+                visualEditor.classList.remove('hidden');
+                jsonTextarea.classList.add('hidden');
+                toggleJsonBtn.textContent = 'Ver JSON';
+                addDayBtn.style.display = 'block';
+            }
+        });
+        
+        // Inicializar
+        renderDaysEditor();
+        updateJsonTextarea();
+    }
+    
+    /**
      * Gera o formulário de edição baseado na tabela atual.
      */
     function generateRecordForm(record) {
@@ -1448,8 +1593,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="text" name="mesAno" value="${record?.mesAno || ''}" placeholder="Ex: 2025-08" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Dias (JSON)</label>
-                    <textarea name="dias" rows="6" placeholder="Ex: {\"1\": {\"timestamp\": \"2025-01-01T00:00:00.000Z\", \"latitude\": null, \"longitude\": null}}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm">${record?.dias || ''}</textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Dias</label>
+                    <div class="border border-gray-300 rounded-md p-3">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm font-medium text-gray-600">Editor Visual de Dias</span>
+                            <div class="flex gap-2">
+                                <button type="button" id="add-day-btn" class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded">+ Adicionar Dia</button>
+                                <button type="button" id="toggle-json-view" class="bg-gray-500 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded">Ver JSON</button>
+                            </div>
+                        </div>
+                        <div id="days-visual-editor" class="space-y-2 max-h-48 overflow-y-auto">
+                            <!-- Dias serão inseridos aqui dinamicamente -->
+                        </div>
+                        <textarea name="dias" id="dias-json-textarea" rows="6" placeholder="Ex: {\"1\": {\"timestamp\": \"2025-01-01T00:00:00.000Z\", \"latitude\": null, \"longitude\": null}}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm mt-3 hidden">${record?.dias || ''}</textarea>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Fechado</label>
@@ -1470,6 +1627,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         recordForm.innerHTML = html;
+        
+        // Inicializar editor visual de dias se for tabela hospedagem
+        if (currentTable === 'hospedagem') {
+            // Aguardar o DOM ser atualizado
+            setTimeout(() => {
+                initDaysVisualEditor(record?.dias || '');
+            }, 0);
+        }
     }
 
     /**

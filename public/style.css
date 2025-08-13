@@ -384,6 +384,22 @@ input:focus, select:focus, textarea:focus {
     border-color: var(--green-primary);
 }
 
+/* Tema escuro: manter cores do tema claro para o dia atual */
+[data-theme="dark"] .calendar-day.current-day {
+    background-color: #4a5568; /* Cor do tema claro */
+    color: #f7fafc; /* Cor do tema claro */
+    border-color: #1a202c; /* Cor do tema claro */
+}
+
+[data-theme="dark"] .calendar-day.current-day:hover {
+    background-color: #1a202c; /* Cor do tema claro */
+}
+
+[data-theme="dark"] .calendar-day.has-stay.current-day {
+    background-color: #38a169; /* Verde do tema claro */
+    border-color: #48bb78; /* Verde do tema claro */
+}
+
 .calendar-day.weekend {
     background-color: var(--bg-tertiary);
     transition: background-color 0.3s ease;
@@ -673,6 +689,16 @@ input:focus, select:focus, textarea:focus {
     background-color: #e6fffa; /* Verde bem claro */
 }
 
+/* Adaptações para tema escuro - Modal de fechamento de mês */
+[data-theme="dark"] #close-month-modal .space-y-4 > div:first-child {
+    background-color: var(--bg-tertiary);
+    border-left-color: var(--green-primary);
+}
+
+[data-theme="dark"] .month-closed .accordion-toggle {
+    background-color: var(--bg-tertiary);
+}
+
 /* Responsividade Mobile */
 @media (max-width: 1023px) {
     /* Reorganizar layout para mobile */
@@ -804,6 +830,71 @@ input:focus, select:focus, textarea:focus {
 
 #database-editor-modal tr:hover {
     background-color: #f9fafb;
+}
+
+/* Adaptações para tema escuro - Editor de banco de dados */
+[data-theme="dark"] #database-editor-modal th {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] #database-editor-modal td {
+    border-bottom-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #database-editor-modal tr:hover {
+    background-color: var(--hover-bg);
+}
+
+/* Botões de Ação da Grid */
+#database-editor-modal button[title="Editar"]:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+#database-editor-modal button[title="Excluir"]:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] #database-editor-modal button[title="Editar"]:hover {
+    background-color: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] #database-editor-modal button[title="Excluir"]:hover {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Estilos para o editor visual de dias */
+.days-visual-editor {
+    background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .days-visual-editor {
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] #days-visual-editor .bg-gray-50 {
+    background-color: var(--bg-tertiary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] #days-visual-editor .text-gray-600 {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #days-visual-editor .text-gray-500 {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] #days-visual-editor input {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] #days-visual-editor input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
 }
 
 #database-editor-modal .table-actions button {
