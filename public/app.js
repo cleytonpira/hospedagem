@@ -40,6 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeDayDetailsBtn = document.getElementById('close-day-details');
     const dayDetailsTitle = document.getElementById('day-details-title');
     const dayDetailsContent = document.getElementById('day-details-content');
+    
+    // Sistema de Temas
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('sun-icon');
+    const moonIcon = document.getElementById('moon-icon');
 
     // --- Constantes e Estado da Aplicação ---
     const API_URL = '/api/hospedagem';
@@ -77,6 +82,59 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTableData = [];
     let editingRecord = null;
     let editingIndex = -1;
+
+    // === SISTEMA DE TEMAS ===
+    
+    /**
+     * Obtém o tema atual (salvo no localStorage ou tema claro como padrão)
+     */
+    function getCurrentTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            return savedTheme;
+        }
+        return 'light'; // Sempre usar tema claro como padrão
+    }
+    
+    /**
+     * Aplica o tema especificado
+     */
+    function applyTheme(theme) {
+        const html = document.documentElement;
+        
+        if (theme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        } else {
+            html.removeAttribute('data-theme');
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+        }
+        
+        localStorage.setItem('theme', theme);
+    }
+    
+    /**
+     * Alterna entre tema claro e escuro
+     */
+    function toggleTheme() {
+        const currentTheme = getCurrentTheme();
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+    }
+    
+    /**
+     * Inicializa o sistema de temas
+     */
+    function initThemeSystem() {
+        // Aplica o tema inicial
+        const initialTheme = getCurrentTheme();
+        applyTheme(initialTheme);
+        
+        // Adiciona listener para o botão de alternância
+        themeToggleBtn.addEventListener('click', toggleTheme);
+    }
 
     // --- Funções ---
 
@@ -226,19 +284,19 @@ document.addEventListener('DOMContentLoaded', () => {
         generalStatisticsDiv.innerHTML = `
             <h3 class="text-xl font-bold mb-4 text-gray-800">Estatísticas Gerais</h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6">
-                <div class="text-center p-2 md:p-4 bg-blue-50 rounded-lg">
+                <div class="text-center p-2 md:p-4 bg-blue-50 rounded-lg stats-card">
                     <div class="text-lg md:text-2xl font-bold text-blue-600 leading-tight">${totalMeses}</div>
-                    <div class="text-xs md:text-sm text-gray-600 leading-tight">Meses Hospedados</div>
+                    <div class="text-xs md:text-sm text-gray-600 leading-tight">Meses</div>
                 </div>
-                <div class="text-center p-2 md:p-4 bg-green-50 rounded-lg">
+                <div class="text-center p-2 md:p-4 bg-green-50 rounded-lg stats-card">
                     <div class="text-lg md:text-2xl font-bold text-green-600 leading-tight">${totalDias}</div>
                     <div class="text-xs md:text-sm text-gray-600 leading-tight">Total de Dias</div>
                 </div>
-                <div class="text-center p-2 md:p-4 bg-purple-50 rounded-lg">
+                <div class="text-center p-2 md:p-4 bg-purple-50 rounded-lg stats-card">
                     <div class="text-sm md:text-xl font-bold text-purple-600 leading-tight">R$ ${totalValorPago.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     <div class="text-xs md:text-sm text-gray-600 leading-tight">Valor Total Pago</div>
                 </div>
-                <div class="text-center p-2 md:p-4 bg-orange-50 rounded-lg">
+                <div class="text-center p-2 md:p-4 bg-orange-50 rounded-lg stats-card">
                     <div class="text-sm md:text-xl font-bold text-orange-600 leading-tight">R$ ${mediaMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     <div class="text-xs md:text-sm text-gray-600 leading-tight">Média Mensal</div>
                 </div>
@@ -1591,7 +1649,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="rounded-lg">
                     <h4 class="font-semibold text-gray-700 mb-2">📍 Localização</h4>
                     <p class="text-gray-600 text-sm mb-3">Lat: ${dayData.latitude}, Lng: ${dayData.longitude}</p>
-                    <div id="day-details-map" class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <div id="day-details-map" class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
                         <span class="text-gray-500">Carregando mapa...</span>
                     </div>
                 </div>
@@ -1652,5 +1710,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openDayDetailsModal = openDayDetailsModal;
 
     // --- Inicialização ---
+    initThemeSystem();
     loadData();
 });
