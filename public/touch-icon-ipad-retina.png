@@ -1,11 +1,38 @@
 <svg width="167" height="167" viewBox="0 0 167 167" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo sólido verde -->
   <rect width="167" height="167" fill="#059669" rx="30" ry="30"/>
-  <g transform="translate(42, 42)">
-    <path d="M42 23L14 46v37h56V46L42 23z" fill="white" stroke="white" stroke-width="2"/>
-    <path d="M9 46L42 18L75 46" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="34" y="65" width="15" height="18" fill="#059669" stroke="white" stroke-width="2"/>
-    <rect x="21" y="56" width="9" height="9" fill="#059669" stroke="white" stroke-width="1.5"/>
-    <rect x="54" y="56" width="9" height="9" fill="#059669" stroke="white" stroke-width="1.5"/>
-    <path d="M42 4L44 10L50 10L46 14L48 20L42 16L36 20L38 14L34 10L40 10Z" fill="white"/>
+  
+  <!-- Calendário centralizado e ampliado -->
+  <g transform="translate(83.5, 83.5) scale(2.3) translate(-32, -32)">
+    <!-- Fundo do calendário -->
+    <rect x="12" y="16" width="40" height="36" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="2" rx="4"/>
+    
+    <!-- Cabeçalho do calendário -->
+    <rect x="12" y="16" width="40" height="10" fill="#3B82F6" rx="4"/>
+    <rect x="12" y="22" width="40" height="4" fill="#3B82F6"/>
+    
+    <!-- Argolas do calendário -->
+    <rect x="20" y="10" width="3" height="12" fill="#6B7280" rx="1.5"/>
+    <rect x="41" y="10" width="3" height="12" fill="#6B7280" rx="1.5"/>
+    
+    <!-- Linhas do calendário -->
+    <line x1="16" y1="30" x2="48" y2="30" stroke="#E5E7EB" stroke-width="1"/>
+    <line x1="16" y1="36" x2="48" y2="36" stroke="#E5E7EB" stroke-width="1"/>
+    <line x1="16" y1="42" x2="48" y2="42" stroke="#E5E7EB" stroke-width="1"/>
+    
+    <!-- Colunas do calendário -->
+    <line x1="22" y1="26" x2="22" y2="48" stroke="#E5E7EB" stroke-width="1"/>
+    <line x1="32" y1="26" x2="32" y2="48" stroke="#E5E7EB" stroke-width="1"/>
+    <line x1="42" y1="26" x2="42" y2="48" stroke="#E5E7EB" stroke-width="1"/>
+    
+    <!-- Alguns números do calendário -->
+    <text x="18" y="34" font-family="Arial" font-size="6" fill="#374151" text-anchor="middle">1</text>
+    <text x="28" y="34" font-family="Arial" font-size="6" fill="#374151" text-anchor="middle">2</text>
+    <text x="38" y="34" font-family="Arial" font-size="6" fill="#374151" text-anchor="middle">3</text>
+    <text x="18" y="40" font-family="Arial" font-size="6" fill="#374151" text-anchor="middle">8</text>
+    <text x="28" y="40" font-family="Arial" font-size="6" fill="#FFFFFF" text-anchor="middle">9</text>
+    
+    <!-- Destaque em um dia -->
+    <rect x="24" y="36" width="8" height="6" fill="#3B82F6" rx="1"/>
   </g>
 </svg>
