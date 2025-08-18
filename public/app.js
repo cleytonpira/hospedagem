@@ -1874,6 +1874,111 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tornar a função global para uso nos event listeners
     window.openDayDetailsModal = openDayDetailsModal;
 
+    // === PULL-TO-REFRESH FUNCTIONALITY ===
+    
+    let pullToRefreshState = {
+        startY: 0,
+        currentY: 0,
+        isRefreshing: false,
+        threshold: 80,
+        maxPull: 120
+    };
+    
+    // Criar elemento do indicador de pull-to-refresh
+    function createPullToRefreshIndicator() {
+        const indicator = document.createElement('div');
+        indicator.id = 'pull-to-refresh-indicator';
+        indicator.innerHTML = `
+            <div class="pull-refresh-content">
+                <div class="pull-refresh-spinner"></div>
+                <span class="pull-refresh-text">Puxe para atualizar</span>
+            </div>
+        `;
+        document.body.insertBefore(indicator, document.body.firstChild);
+        return indicator;
+    }
+    
+    // Inicializar indicador
+    const pullIndicator = createPullToRefreshIndicator();
+    
+    // Detectar início do toque
+    document.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0 && !pullToRefreshState.isRefreshing) {
+            pullToRefreshState.startY = e.touches[0].clientY;
+        }
+    }, { passive: true });
+    
+    // Detectar movimento do toque
+    document.addEventListener('touchmove', (e) => {
+        if (pullToRefreshState.startY === 0 || pullToRefreshState.isRefreshing) return;
+        
+        pullToRefreshState.currentY = e.touches[0].clientY;
+        const pullDistance = pullToRefreshState.currentY - pullToRefreshState.startY;
+        
+        if (pullDistance > 0 && window.scrollY === 0) {
+            e.preventDefault();
+            
+            const normalizedDistance = Math.min(pullDistance, pullToRefreshState.maxPull);
+            const progress = normalizedDistance / pullToRefreshState.threshold;
+            
+            // Atualizar posição do indicador
+            pullIndicator.style.transform = `translateY(${normalizedDistance - 60}px)`;
+            pullIndicator.style.opacity = Math.min(progress, 1);
+            
+            // Atualizar texto baseado no progresso
+            const textElement = pullIndicator.querySelector('.pull-refresh-text');
+            if (normalizedDistance >= pullToRefreshState.threshold) {
+                textElement.textContent = 'Solte para atualizar';
+                pullIndicator.classList.add('ready-to-refresh');
+            } else {
+                textElement.textContent = 'Puxe para atualizar';
+                pullIndicator.classList.remove('ready-to-refresh');
+            }
+        }
+    }, { passive: false });
+    
+    // Detectar fim do toque
+    document.addEventListener('touchend', (e) => {
+        if (pullToRefreshState.startY === 0 || pullToRefreshState.isRefreshing) return;
+        
+        const pullDistance = pullToRefreshState.currentY - pullToRefreshState.startY;
+        
+        if (pullDistance >= pullToRefreshState.threshold && window.scrollY === 0) {
+            // Ativar refresh
+            pullToRefreshState.isRefreshing = true;
+            pullIndicator.classList.add('refreshing');
+            pullIndicator.style.transform = 'translateY(20px)';
+            
+            const textElement = pullIndicator.querySelector('.pull-refresh-text');
+            textElement.textContent = 'Atualizando...';
+            
+            // Simular carregamento e recarregar dados
+            setTimeout(() => {
+                loadData(); // Recarregar dados da aplicação
+                
+                // Resetar estado após carregamento
+                setTimeout(() => {
+                    pullToRefreshState.isRefreshing = false;
+                    pullIndicator.style.transform = 'translateY(-60px)';
+                    pullIndicator.style.opacity = '0';
+                    pullIndicator.classList.remove('refreshing', 'ready-to-refresh');
+                    
+                    const textElement = pullIndicator.querySelector('.pull-refresh-text');
+                    textElement.textContent = 'Puxe para atualizar';
+                }, 300);
+            }, 1000);
+        } else {
+            // Resetar posição
+            pullIndicator.style.transform = 'translateY(-60px)';
+            pullIndicator.style.opacity = '0';
+            pullIndicator.classList.remove('ready-to-refresh');
+        }
+        
+        // Resetar estado
+        pullToRefreshState.startY = 0;
+        pullToRefreshState.currentY = 0;
+    }, { passive: true });
+
     // --- Inicialização ---
     initThemeSystem();
     loadData();

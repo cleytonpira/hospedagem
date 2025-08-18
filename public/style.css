@@ -1021,3 +1021,132 @@ input:focus, select:focus, textarea:focus {
         font-size: 0.75rem !important;
     }
 }
+
+/* === PULL-TO-REFRESH STYLES === */
+
+#pull-to-refresh-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(135deg, var(--green-primary), var(--green-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transform: translateY(-60px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.pull-refresh-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.pull-refresh-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.pull-refresh-text {
+    transition: all 0.3s ease;
+}
+
+/* Estados do pull-to-refresh */
+#pull-to-refresh-indicator.ready-to-refresh {
+    background: linear-gradient(135deg, var(--green-secondary), var(--green-primary));
+}
+
+#pull-to-refresh-indicator.ready-to-refresh .pull-refresh-text {
+    font-weight: 600;
+    transform: scale(1.05);
+}
+
+#pull-to-refresh-indicator.refreshing {
+    transform: translateY(0px) !important;
+    opacity: 1 !important;
+}
+
+#pull-to-refresh-indicator.refreshing .pull-refresh-spinner {
+    opacity: 1;
+    animation: spin 1s linear infinite;
+}
+
+/* Animação do spinner */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Efeito de pulsação para o estado ready */
+#pull-to-refresh-indicator.ready-to-refresh .pull-refresh-spinner {
+    opacity: 1;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+/* Responsividade para o pull-to-refresh */
+@media (max-width: 768px) {
+    #pull-to-refresh-indicator {
+        height: 50px;
+        transform: translateY(-50px);
+    }
+    
+    .pull-refresh-content {
+        gap: 8px;
+        font-size: 0.85rem;
+    }
+    
+    .pull-refresh-spinner {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    #pull-to-refresh-indicator {
+        height: 45px;
+        transform: translateY(-45px);
+    }
+    
+    .pull-refresh-content {
+        gap: 6px;
+        font-size: 0.8rem;
+    }
+    
+    .pull-refresh-spinner {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* Prevenir seleção de texto durante o pull */
+body.pull-to-refresh-active {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
