@@ -881,6 +881,44 @@ input:focus, select:focus, textarea:focus {
         padding: 0.5rem 0.75rem !important;
         font-size: 0.875rem !important;
     }
+    
+    /* Ajustes para o mapa no mobile */
+    #day-details-map {
+        height: 200px !important;
+        min-height: 200px;
+        touch-action: manipulation;
+    }
+    
+    #day-details-map iframe {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 200px;
+        border: none !important;
+        display: block !important;
+        touch-action: manipulation;
+    }
+    
+    /* Modal ajustes para mobile */
+    #day-details-modal .modal-content {
+        max-width: 95vw !important;
+        margin: 0.5rem !important;
+        max-height: 95vh !important;
+    }
+}
+
+/* Estilos para o mapa de geolocalização */
+#day-details-map {
+    position: relative;
+    overflow: hidden;
+    background-color: #f3f4f6;
+}
+
+#day-details-map iframe {
+    border: none;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 0.5rem;
 }
 
 /* Estilos do Editor de Banco de Dados */

@@ -1850,8 +1850,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Converter para números e calcular bbox explicitamente
         const lat = parseFloat(latitude);
         const lng = parseFloat(longitude);
-        const offset = 0.01;
         
+        // Validar coordenadas
+        if (isNaN(lat) || isNaN(lng)) {
+            mapContainer.innerHTML = `
+                <div class="flex items-center justify-center h-full text-gray-500">
+                    <span>Coordenadas inválidas</span>
+                </div>
+            `;
+            return;
+        }
+        
+        const offset = 0.01;
         const west = lng - offset;
         const south = lat - offset;
         const east = lng + offset;
@@ -1863,12 +1873,31 @@ document.addEventListener('DOMContentLoaded', () => {
             <iframe 
                 width="100%" 
                 height="100%" 
-                frameborder="0" 
-                style="border:0; border-radius: 0.5rem;" 
+                style="border: none; border-radius: 0.5rem; display: block;" 
                 src="${mapUrl}" 
-                allowfullscreen>
+                loading="lazy"
+                allowfullscreen
+                title="Mapa da localização"
+                onload="this.style.opacity='1'"
+                onerror="this.parentElement.innerHTML='<div class=\"flex items-center justify-center h-full text-gray-500\"><span>Erro ao carregar mapa</span></div>'">
             </iframe>
         `;
+        
+        // Adicionar timeout para detectar se o iframe não carregou
+        setTimeout(() => {
+            const iframe = mapContainer.querySelector('iframe');
+            if (iframe && iframe.style.opacity !== '1') {
+                mapContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-gray-500 space-y-2">
+                        <span>📍</span>
+                        <span class="text-sm">Lat: ${lat}, Lng: ${lng}</span>
+                        <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="text-blue-500 hover:text-blue-700 text-sm underline">
+                            Abrir no Google Maps
+                        </a>
+                    </div>
+                `;
+            }
+        }, 5000);
     }
 
     // Tornar a função global para uso nos event listeners
