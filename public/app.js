@@ -266,9 +266,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalDias = 0;
         let totalValorPago = 0;
         
+        // Obter informações sobre o mês anterior
+        const previousMonthKey = getPreviousMonthKey();
+        const isPrevMonthOpen = isPreviousMonthOpen();
+        
         // Calcular estatísticas de todos os meses
         Object.keys(hospedagens).forEach(monthKey => {
             const month = hospedagens[monthKey];
+            const isPreviousMonth = monthKey === previousMonthKey;
+            
             totalMeses++;
             const dias = extractDaysFromHospedagem(month);
             totalDias += dias.length;
@@ -276,6 +282,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (month.fechado && month.valorPago) {
                 totalValorPago += month.valorPago;
                 totalMesesFechados++;
+            } else if (isPreviousMonth && isPrevMonthOpen) {
+                // Para o mês anterior aberto, incluir valor estimado nas estatísticas
+                const dailyRate = parseFloat(appData.usuario?.valorDiaria) || 0;
+                const estimatedValue = dias.length * dailyRate;
+                totalValorPago += estimatedValue;
+                totalMesesFechados++; // Contar como "fechado" para fins de cálculo da média
             }
         });
         
@@ -318,6 +330,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Obtém a chave do mês anterior ao atual.
+     * @returns {string} Chave do mês anterior no formato 'YYYY-MM'
+     */
+    function getPreviousMonthKey() {
+        const today = new Date();
+        const previousMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        return `${previousMonth.getFullYear()}-${String(previousMonth.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    /**
+     * Verifica se o mês anterior ainda está aberto (não fechado).
+     * @returns {boolean} True se o mês anterior existir e estiver aberto
+     */
+    function isPreviousMonthOpen() {
+        const previousMonthKey = getPreviousMonthKey();
+        const previousMonthData = appData.hospedagens[previousMonthKey];
+        return previousMonthData && !previousMonthData.fechado;
+    }
+
+    /**
      * Renderiza o gráfico de estatísticas mensais com dois eixos.
      */
     function renderMonthlyStatsChart() {
@@ -344,13 +376,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Obter data atual para identificar o mês atual
         const today = new Date();
         const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        const previousMonthKey = getPreviousMonthKey();
         
         monthKeys.forEach(monthKey => {
             const month = hospedagens[monthKey];
             const isCurrentMonth = monthKey === currentMonthKey;
+            const isPreviousMonth = monthKey === previousMonthKey;
             
-            // Mostrar meses fechados e o mês atual (se existir)
-            if (!month.fechado && !isCurrentMonth) {
+            // Mostrar meses fechados, o mês atual (se existir) e o mês anterior (se estiver aberto)
+            if (!month.fechado && !isCurrentMonth && !(isPreviousMonth && isPreviousMonthOpen())) {
                 return;
             }
             
@@ -374,6 +408,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Cor verde claro para mês atual estimado
                 backgroundColors.push('rgba(34, 197, 94, 0.6)');
                 borderColors.push('rgba(34, 197, 94, 1)');
+            } else if (isPreviousMonth && !month.fechado) {
+                // Para o mês anterior aberto, mostrar valor estimado baseado nos dias já registrados
+                const dailyRate = parseFloat(appData.usuario?.valorDiaria) || 0;
+                const estimatedValue = dias.length * dailyRate;
+                
+                diasData.push(dias.length);
+                valorPagoData.push(estimatedValue);
+                // Cor azul claro para mês anterior aberto (estimado)
+                backgroundColors.push('rgba(59, 130, 246, 0.6)');
+                borderColors.push('rgba(59, 130, 246, 1)');
             } else {
                 diasData.push(dias.length);
                 valorPagoData.push(month.valorPago ? month.valorPago : 0);
